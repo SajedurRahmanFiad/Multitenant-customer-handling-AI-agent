@@ -1,0 +1,7 @@
+{
+  "name": "AI Support API Dashboard",
+  "description": "Clean, flexible management dashboard for multi-channel B2B customer support AI, knowledge bases, live inbox, and agent configuration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
+
