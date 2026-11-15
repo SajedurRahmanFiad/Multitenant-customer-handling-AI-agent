@@ -14,6 +14,8 @@ export type ConversationFilter =
   | 'waiting'
   | 'resolved';
 
+export type ChannelFilter = ChannelType | null;
+
 export type PriorityType = 'urgent' | 'high' | 'medium' | 'low';
 
 export type AiControlStatus = 'active' | 'paused' | 'human_controlled';

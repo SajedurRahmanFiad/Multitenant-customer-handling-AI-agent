@@ -19,15 +19,15 @@ import {
   DollarSign,
   Globe,
   Sliders,
-  Check,
   X,
-  Calculator,
   RefreshCw,
   Info,
 } from 'lucide-react';
 
 interface CurrencyManagementViewProps {
   currencies: CustomCurrency[];
+  exchangeRatesByCode: Record<string, number>;
+  exchangeRatesStatus: 'loading' | 'live' | 'unavailable';
   tenants: TenantClient[];
   platformDefaultCurrencyCode: string;
   onAddCurrency: (currency: CustomCurrency) => void;
@@ -40,6 +40,8 @@ interface CurrencyManagementViewProps {
 
 export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
   currencies,
+  exchangeRatesByCode,
+  exchangeRatesStatus,
   tenants,
   platformDefaultCurrencyCode,
   onAddCurrency,
@@ -59,15 +61,12 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
   const [formSymbol, setFormSymbol] = useState('');
   const [formSymbolPosition, setFormSymbolPosition] = useState<SymbolPosition>('before');
   const [formSymbolSpacing, setFormSymbolSpacing] = useState(false);
-  const [formExchangeRate, setFormExchangeRate] = useState<number>(1.0);
+  const formExchangeRate = exchangeRatesByCode[formCode.trim().toUpperCase()];
   const [formDecimalPlaces, setFormDecimalPlaces] = useState<number>(2);
   const [formThousandsSep, setFormThousandsSep] = useState(',');
   const [formDecimalSep, setFormDecimalSep] = useState('.');
   const [formIsPlatformDefault, setFormIsPlatformDefault] = useState(false);
   const [formDescription, setFormDescription] = useState('');
-
-  // Live Converter Tool State
-  const [calcAmountUSD, setCalcAmountUSD] = useState<number>(100);
 
   const openAddModal = () => {
     setEditingCurrency(null);
@@ -76,7 +75,6 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
     setFormSymbol('');
     setFormSymbolPosition('before');
     setFormSymbolSpacing(false);
-    setFormExchangeRate(1.0);
     setFormDecimalPlaces(2);
     setFormThousandsSep(',');
     setFormDecimalSep('.');
@@ -92,7 +90,6 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
     setFormSymbol(curr.symbol);
     setFormSymbolPosition(curr.symbolPosition);
     setFormSymbolSpacing(curr.symbolSpacing);
-    setFormExchangeRate(curr.exchangeRateFromUSD);
     setFormDecimalPlaces(curr.decimalPlaces);
     setFormThousandsSep(curr.thousandsSeparator);
     setFormDecimalSep(curr.decimalSeparator);
@@ -109,7 +106,7 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
     symbol: formSymbol.trim() || '¤',
     symbolPosition: formSymbolPosition,
     symbolSpacing: formSymbolSpacing,
-    exchangeRateFromUSD: Number(formExchangeRate) || 1.0,
+    exchangeRateFromUSD: formExchangeRate ?? 1,
     decimalPlaces: Number(formDecimalPlaces) || 0,
     thousandsSeparator: formThousandsSep,
     decimalSeparator: formDecimalSep,
@@ -125,7 +122,11 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
     }
 
     const cleanCode = formCode.trim().toUpperCase();
-    const rate = Math.max(0.000001, Number(formExchangeRate) || 1.0);
+    const rate = exchangeRatesByCode[cleanCode];
+    if (rate === undefined) {
+      onShowToast(`No live exchange rate is available for ${cleanCode}`);
+      return;
+    }
 
     if (editingCurrency) {
       const updated: CustomCurrency = {
@@ -196,7 +197,7 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
                 Multi-Currency & Exchange Rate System
               </h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
-                {currencies.length} Currencies Configured
+                {currencies.length} Currencies
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
@@ -214,48 +215,6 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
             <Plus className="w-3.5 h-3.5" />
             Add Custom Currency
           </button>
-        </div>
-      </div>
-
-      {/* Platform Admin Default Currency Selector Banner */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <Star className="w-4 h-4 text-amber-500 fill-amber-500" />
-            <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-              Platform Admin Default Currency
-            </h4>
-          </div>
-          <p className="text-xs text-slate-500">
-            Select which currency will be used to display platform-wide metrics, provider costs, and administrative totals.
-          </p>
-        </div>
-
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 bg-slate-50 p-1.5 rounded-xl border border-slate-200">
-            {currencies.map((c) => {
-              const isDefault = c.code === platformDefaultCurrencyCode;
-              return (
-                <button
-                  key={c.code}
-                  type="button"
-                  onClick={() => {
-                    onSetPlatformDefault(c.code);
-                    onShowToast(`Platform admin default currency set to ${c.code} (${c.name})`);
-                  }}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5 ${
-                    isDefault
-                      ? 'bg-slate-900 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
-                  }`}
-                >
-                  <span className="font-mono">{c.symbol}</span>
-                  <span>{c.code}</span>
-                  {isDefault && <Check className="w-3 h-3 text-emerald-400" />}
-                </button>
-              );
-            })}
-          </div>
         </div>
       </div>
 
@@ -390,63 +349,6 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
                       </button>
                     )}
                   </div>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Live Real-Time Multi-Currency Converter */}
-      <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-100">
-          <div>
-            <h4 className="text-xs font-bold text-slate-900 flex items-center gap-2">
-              <Calculator className="w-4 h-4 text-emerald-600" />
-              Live Multi-Currency Rate Converter
-            </h4>
-            <p className="text-[11px] text-slate-500">
-              Test how custom amounts convert and format across all configured currencies simultaneously.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-slate-500 font-medium">Input Base (USD):</span>
-            <div className="relative">
-              <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 font-mono text-xs">
-                $
-              </span>
-              <input
-                type="number"
-                min="0"
-                step="1"
-                value={calcAmountUSD}
-                onChange={(e) => setCalcAmountUSD(Math.max(0, parseFloat(e.target.value) || 0))}
-                className="w-28 pl-6 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Real-time Result Tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
-          {currencies.map((curr) => {
-            const converted = calcAmountUSD * curr.exchangeRateFromUSD;
-            const formatted = formatCurrencyAmount(converted, curr);
-            return (
-              <div
-                key={curr.code}
-                className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 space-y-1"
-              >
-                <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
-                  <span>{curr.code}</span>
-                  <span className="font-mono text-slate-400">{curr.symbol}</span>
-                </div>
-                <div className="text-sm font-bold text-slate-900 truncate" title={formatted}>
-                  {formatted}
-                </div>
-                <div className="text-[10px] text-slate-400">
-                  Rate: {curr.exchangeRateFromUSD}
                 </div>
               </div>
             );
@@ -618,18 +520,16 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
                 {/* Exchange Rate from USD */}
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    Exchange Rate from 1.00 USD *
+                    Live Rate from 1.00 USD
                   </label>
                   <input
-                    type="number"
-                    step="0.0001"
-                    min="0.000001"
-                    required
-                    value={formExchangeRate}
-                    onChange={(e) => setFormExchangeRate(parseFloat(e.target.value))}
-                    placeholder="e.g. 122.50"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-900 focus:outline-none focus:ring-1 focus:ring-slate-900"
+                    type="text"
+                    readOnly
+                    value={formExchangeRate ?? ''}
+                    placeholder={exchangeRatesStatus === 'loading' ? 'Loading live rates...' : 'No live rate for this code'}
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-xl text-xs font-mono font-semibold text-slate-900"
                   />
+                  <p className="mt-1 text-[10px] text-slate-500">Fetched by currency code. Rates refresh automatically.</p>
                 </div>
               </div>
 
@@ -757,11 +657,11 @@ export const CurrencyManagementView: React.FC<CurrencyManagementViewProps> = ({
                     Live Formatted Preview
                   </span>
                   <span className="font-mono font-bold text-emerald-950 text-sm">
-                    {formatCurrencyAmount(1250 * (Number(formExchangeRate) || 1), previewCurrency)}
+                    {formExchangeRate === undefined ? 'Live rate unavailable' : formatCurrencyAmount(1250 * formExchangeRate, previewCurrency)}
                   </span>
                 </div>
                 <div className="text-right text-[10px] text-emerald-800">
-                  Rate: 1 USD = {formExchangeRate} {formCode || 'CURR'}
+                  Rate: {formExchangeRate === undefined ? 'Unavailable' : `1 USD = ${formExchangeRate} ${formCode || 'CURR'}`}
                 </div>
               </div>
 

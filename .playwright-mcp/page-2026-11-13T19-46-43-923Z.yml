@@ -1,0 +1,349 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]: S
+      - generic [ref=f3e7]:
+        - generic [ref=f3e8]: Support API
+        - generic [ref=f3e9]: Team & Permissions
+    - button "Open navigation" [ref=f3e10]
+  - main [ref=f3e13]:
+    - generic [ref=f3e14]:
+      - generic [ref=f3e17]:
+        - button "Team Members 12" [ref=f3e18] [cursor=pointer]:
+          - generic [ref=f3e24]: Team Members
+          - generic [ref=f3e25]: "12"
+        - button "Permissions Matrix" [ref=f3e26] [cursor=pointer]
+        - button "Active Sessions 4" [ref=f3e30] [cursor=pointer]:
+          - generic [ref=f3e33]: Active Sessions
+          - generic [ref=f3e34]: "4"
+        - button "Admin Activity 4" [ref=f3e35] [cursor=pointer]:
+          - generic [ref=f3e39]: Admin Activity
+          - generic [ref=f3e40]: "4"
+      - generic [ref=f3e41]:
+        - generic [ref=f3e42]:
+          - generic [ref=f3e49]:
+            - generic [ref=f3e50]:
+              - generic [ref=f3e51]: All Platform Tenants
+              - generic [ref=f3e52]: 12 active members
+            - paragraph [ref=f3e53]: Showing team directory across all registered platform tenants.
+          - button "Invite Member" [ref=f3e54]
+        - table [ref=f3e60]:
+          - rowgroup [ref=f3e61]:
+            - row [ref=f3e62]:
+              - columnheader "Member" [ref=f3e63]
+              - columnheader "Tenant" [ref=f3e64]
+              - columnheader "Role" [ref=f3e65]
+              - columnheader "Department" [ref=f3e66]
+              - columnheader "Channels" [ref=f3e67]
+              - columnheader "Security & Status" [ref=f3e68]
+              - columnheader "Actions" [ref=f3e69]
+          - rowgroup [ref=f3e70]:
+            - row [ref=f3e71]:
+              - cell "SA Sajedur Rahman +880 1711-000001" [ref=f3e72]:
+                - generic [ref=f3e73]:
+                  - generic [ref=f3e74]: SA
+                  - generic [ref=f3e75]:
+                    - generic [ref=f3e76]: Sajedur Rahman
+                    - generic [ref=f3e77]: +880 1711-000001
+              - cell "Bengal Loom & Crafts" [ref=f3e80]
+              - cell "Super Admin" [ref=f3e86]
+              - cell "Executive / Platform" [ref=f3e90]
+              - cell "Messenger WhatsApp" [ref=f3e91]:
+                - generic [ref=f3e92]:
+                  - generic [ref=f3e93]: Messenger
+                  - generic [ref=f3e94]: WhatsApp
+              - cell "active 2FA Active · Active now" [ref=f3e95]:
+                - generic [ref=f3e96]:
+                  - generic [ref=f3e97]: active
+                  - generic [ref=f3e100]:
+                    - generic [ref=f3e101]: 2FA Active
+                    - generic [ref=f3e105]: ·
+                    - generic [ref=f3e106]: Active now
+              - cell "Super Admin" [ref=f3e107]:
+                - combobox [disabled] [ref=f3e108]:
+                  - option "Super Admin" [selected]
+                  - option "Administrator"
+                  - option "Support Agent"
+                  - option "Analyst"
+            - row [ref=f3e109]:
+              - cell "RA Rafiq Islam +880 1712-984210" [ref=f3e110]:
+                - generic [ref=f3e111]:
+                  - generic [ref=f3e112]: RA
+                  - generic [ref=f3e113]:
+                    - generic [ref=f3e114]: Rafiq Islam
+                    - generic [ref=f3e115]: +880 1712-984210
+              - cell "Bengal Loom & Crafts" [ref=f3e118]
+              - cell "Administrator" [ref=f3e124]
+              - cell "Customer Operations" [ref=f3e128]
+              - cell "Messenger WhatsApp" [ref=f3e129]:
+                - generic [ref=f3e130]:
+                  - generic [ref=f3e131]: Messenger
+                  - generic [ref=f3e132]: WhatsApp
+              - cell "active 2FA Active · 12 mins ago" [ref=f3e133]:
+                - generic [ref=f3e134]:
+                  - generic [ref=f3e135]: active
+                  - generic [ref=f3e138]:
+                    - generic [ref=f3e139]: 2FA Active
+                    - generic [ref=f3e143]: ·
+                    - generic [ref=f3e144]: 12 mins ago
+              - cell "Administrator" [ref=f3e145]:
+                - combobox [ref=f3e146]:
+                  - option "Super Admin"
+                  - option "Administrator" [selected]
+                  - option "Support Agent"
+                  - option "Analyst"
+            - row [ref=f3e147]:
+              - cell "AN Anika Tabassum +880 1713-445566" [ref=f3e148]:
+                - generic [ref=f3e149]:
+                  - generic [ref=f3e150]: AN
+                  - generic [ref=f3e151]:
+                    - generic [ref=f3e152]: Anika Tabassum
+                    - generic [ref=f3e153]: +880 1713-445566
+              - cell "Bengal Loom & Crafts" [ref=f3e156]
+              - cell "Support Agent" [ref=f3e162]
+              - cell "Support & Returns" [ref=f3e169]
+              - cell "Messenger" [ref=f3e170]
+              - cell "active 2FA Active · 4 mins ago" [ref=f3e173]:
+                - generic [ref=f3e174]:
+                  - generic [ref=f3e175]: active
+                  - generic [ref=f3e178]:
+                    - generic [ref=f3e179]: 2FA Active
+                    - generic [ref=f3e183]: ·
+                    - generic [ref=f3e184]: 4 mins ago
+              - cell "Support Agent" [ref=f3e185]:
+                - combobox [ref=f3e186]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent" [selected]
+                  - option "Analyst"
+            - row [ref=f3e187]:
+              - cell "FA Farhan Kabir +880 1714-889900" [ref=f3e188]:
+                - generic [ref=f3e189]:
+                  - generic [ref=f3e190]: FA
+                  - generic [ref=f3e191]:
+                    - generic [ref=f3e192]: Farhan Kabir
+                    - generic [ref=f3e193]: +880 1714-889900
+              - cell "Bengal Loom & Crafts" [ref=f3e196]
+              - cell "Support Agent" [ref=f3e202]
+              - cell "WhatsApp Escalations" [ref=f3e209]
+              - cell "WhatsApp" [ref=f3e210]
+              - cell "active 2FA Off · 1 hour ago" [ref=f3e213]:
+                - generic [ref=f3e214]:
+                  - generic [ref=f3e215]: active
+                  - generic [ref=f3e218]:
+                    - generic [ref=f3e219]: 2FA Off
+                    - generic [ref=f3e220]: ·
+                    - generic [ref=f3e221]: 1 hour ago
+              - cell "Support Agent" [ref=f3e222]:
+                - combobox [ref=f3e223]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent" [selected]
+                  - option "Analyst"
+            - row [ref=f3e224]:
+              - cell "NU Nusrat Jahan +880 1715-112233" [ref=f3e225]:
+                - generic [ref=f3e226]:
+                  - generic [ref=f3e227]: NU
+                  - generic [ref=f3e228]:
+                    - generic [ref=f3e229]: Nusrat Jahan
+                    - generic [ref=f3e230]: +880 1715-112233
+              - cell "Bengal Loom & Crafts" [ref=f3e233]
+              - cell "Read-Only Analyst" [ref=f3e239]
+              - cell "Business Intelligence" [ref=f3e244]
+              - cell "Messenger WhatsApp" [ref=f3e245]:
+                - generic [ref=f3e246]:
+                  - generic [ref=f3e247]: Messenger
+                  - generic [ref=f3e248]: WhatsApp
+              - cell "active 2FA Active · Yesterday at 5:14 PM" [ref=f3e249]:
+                - generic [ref=f3e250]:
+                  - generic [ref=f3e251]: active
+                  - generic [ref=f3e254]:
+                    - generic [ref=f3e255]: 2FA Active
+                    - generic [ref=f3e259]: ·
+                    - generic [ref=f3e260]: Yesterday at 5:14 PM
+              - cell "Analyst" [ref=f3e261]:
+                - combobox [ref=f3e262]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent"
+                  - option "Analyst" [selected]
+            - row [ref=f3e263]:
+              - cell "MA Mahir Faisal +880 1718-990011" [ref=f3e264]:
+                - generic [ref=f3e265]:
+                  - generic [ref=f3e266]: MA
+                  - generic [ref=f3e267]:
+                    - generic [ref=f3e268]: Mahir Faisal
+                    - generic [ref=f3e269]: +880 1718-990011
+              - cell "Bengal Loom & Crafts" [ref=f3e272]
+              - cell "Support Agent" [ref=f3e278]
+              - cell "Night Shift Support" [ref=f3e285]
+              - cell "Messenger WhatsApp" [ref=f3e286]:
+                - generic [ref=f3e287]:
+                  - generic [ref=f3e288]: Messenger
+                  - generic [ref=f3e289]: WhatsApp
+              - cell "invited 2FA Off · Invitation sent 2 days ago" [ref=f3e290]:
+                - generic [ref=f3e291]:
+                  - generic [ref=f3e292]: invited
+                  - generic [ref=f3e295]:
+                    - generic [ref=f3e296]: 2FA Off
+                    - generic [ref=f3e297]: ·
+                    - generic [ref=f3e298]: Invitation sent 2 days ago
+              - cell "Support Agent" [ref=f3e299]:
+                - combobox [ref=f3e300]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent" [selected]
+                  - option "Analyst"
+            - row [ref=f3e301]:
+              - cell "MU Mushfiqur Rahman +880 1819-204918" [ref=f3e302]:
+                - generic [ref=f3e303]:
+                  - generic [ref=f3e304]: MU
+                  - generic [ref=f3e305]:
+                    - generic [ref=f3e306]: Mushfiqur Rahman
+                    - generic [ref=f3e307]: +880 1819-204918
+              - cell "Gadget Express BD" [ref=f3e310]
+              - cell "Administrator" [ref=f3e316]
+              - cell "Operations Lead" [ref=f3e320]
+              - cell "Messenger WhatsApp" [ref=f3e321]:
+                - generic [ref=f3e322]:
+                  - generic [ref=f3e323]: Messenger
+                  - generic [ref=f3e324]: WhatsApp
+              - cell "active 2FA Active · 8 mins ago" [ref=f3e325]:
+                - generic [ref=f3e326]:
+                  - generic [ref=f3e327]: active
+                  - generic [ref=f3e330]:
+                    - generic [ref=f3e331]: 2FA Active
+                    - generic [ref=f3e335]: ·
+                    - generic [ref=f3e336]: 8 mins ago
+              - cell "Administrator" [ref=f3e337]:
+                - combobox [ref=f3e338]:
+                  - option "Super Admin"
+                  - option "Administrator" [selected]
+                  - option "Support Agent"
+                  - option "Analyst"
+            - row [ref=f3e339]:
+              - cell "TA Tanvir Ahmed +880 1820-334455" [ref=f3e340]:
+                - generic [ref=f3e341]:
+                  - generic [ref=f3e342]: TA
+                  - generic [ref=f3e343]:
+                    - generic [ref=f3e344]: Tanvir Ahmed
+                    - generic [ref=f3e345]: +880 1820-334455
+              - cell "Gadget Express BD" [ref=f3e348]
+              - cell "Support Agent" [ref=f3e354]
+              - cell "Device Warranty & Tech" [ref=f3e361]
+              - cell "WhatsApp" [ref=f3e362]
+              - cell "active 2FA Active · 23 mins ago" [ref=f3e365]:
+                - generic [ref=f3e366]:
+                  - generic [ref=f3e367]: active
+                  - generic [ref=f3e370]:
+                    - generic [ref=f3e371]: 2FA Active
+                    - generic [ref=f3e375]: ·
+                    - generic [ref=f3e376]: 23 mins ago
+              - cell "Support Agent" [ref=f3e377]:
+                - combobox [ref=f3e378]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent" [selected]
+                  - option "Analyst"
+            - row [ref=f3e379]:
+              - cell "SA Sabrina Mostafa +880 1821-667788" [ref=f3e380]:
+                - generic [ref=f3e381]:
+                  - generic [ref=f3e382]: SA
+                  - generic [ref=f3e383]:
+                    - generic [ref=f3e384]: Sabrina Mostafa
+                    - generic [ref=f3e385]: +880 1821-667788
+              - cell "Gadget Express BD" [ref=f3e388]
+              - cell "Read-Only Analyst" [ref=f3e394]
+              - cell "Data Operations" [ref=f3e399]
+              - cell "Messenger WhatsApp" [ref=f3e400]:
+                - generic [ref=f3e401]:
+                  - generic [ref=f3e402]: Messenger
+                  - generic [ref=f3e403]: WhatsApp
+              - cell "active 2FA Off · 3 hours ago" [ref=f3e404]:
+                - generic [ref=f3e405]:
+                  - generic [ref=f3e406]: active
+                  - generic [ref=f3e409]:
+                    - generic [ref=f3e410]: 2FA Off
+                    - generic [ref=f3e411]: ·
+                    - generic [ref=f3e412]: 3 hours ago
+              - cell "Analyst" [ref=f3e413]:
+                - combobox [ref=f3e414]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent"
+                  - option "Analyst" [selected]
+            - row [ref=f3e415]:
+              - cell "DR Dr. Kazi Mahfuz +880 1711-002941" [ref=f3e416]:
+                - generic [ref=f3e417]:
+                  - generic [ref=f3e418]: DR
+                  - generic [ref=f3e419]:
+                    - generic [ref=f3e420]: Dr. Kazi Mahfuz
+                    - generic [ref=f3e421]: +880 1711-002941
+              - cell "Dhaka Pharma & Care" [ref=f3e424]
+              - cell "Administrator" [ref=f3e430]
+              - cell "Pharmacy Supervision" [ref=f3e434]
+              - cell "Messenger WhatsApp" [ref=f3e435]:
+                - generic [ref=f3e436]:
+                  - generic [ref=f3e437]: Messenger
+                  - generic [ref=f3e438]: WhatsApp
+              - cell "active 2FA Active · 5 mins ago" [ref=f3e439]:
+                - generic [ref=f3e440]:
+                  - generic [ref=f3e441]: active
+                  - generic [ref=f3e444]:
+                    - generic [ref=f3e445]: 2FA Active
+                    - generic [ref=f3e449]: ·
+                    - generic [ref=f3e450]: 5 mins ago
+              - cell "Administrator" [ref=f3e451]:
+                - combobox [ref=f3e452]:
+                  - option "Super Admin"
+                  - option "Administrator" [selected]
+                  - option "Support Agent"
+                  - option "Analyst"
+            - row [ref=f3e453]:
+              - cell "NA Nasrin Akhter +880 1716-554433" [ref=f3e454]:
+                - generic [ref=f3e455]:
+                  - generic [ref=f3e456]: NA
+                  - generic [ref=f3e457]:
+                    - generic [ref=f3e458]: Nasrin Akhter
+                    - generic [ref=f3e459]: +880 1716-554433
+              - cell "Dhaka Pharma & Care" [ref=f3e462]
+              - cell "Support Agent" [ref=f3e468]
+              - cell "Prescription Verification" [ref=f3e475]
+              - cell "WhatsApp" [ref=f3e476]
+              - cell "active 2FA Active · 15 mins ago" [ref=f3e479]:
+                - generic [ref=f3e480]:
+                  - generic [ref=f3e481]: active
+                  - generic [ref=f3e484]:
+                    - generic [ref=f3e485]: 2FA Active
+                    - generic [ref=f3e489]: ·
+                    - generic [ref=f3e490]: 15 mins ago
+              - cell "Support Agent" [ref=f3e491]:
+                - combobox [ref=f3e492]:
+                  - option "Super Admin"
+                  - option "Administrator"
+                  - option "Support Agent" [selected]
+                  - option "Analyst"
+            - row [ref=f3e493]:
+              - cell "SA Samira Huq +880 1911-382910" [ref=f3e494]:
+                - generic [ref=f3e495]:
+                  - generic [ref=f3e496]: SA
+                  - generic [ref=f3e497]:
+                    - generic [ref=f3e498]: Samira Huq
+                    - generic [ref=f3e499]: +880 1911-382910
+              - cell "Aarong Handcrafts Reseller" [ref=f3e502]
+              - cell "Administrator" [ref=f3e508]
+              - cell "Retail Inquiries" [ref=f3e512]
+              - cell "Messenger" [ref=f3e513]
+              - cell "active 2FA Active · 45 mins ago" [ref=f3e516]:
+                - generic [ref=f3e517]:
+                  - generic [ref=f3e518]: active
+                  - generic [ref=f3e521]:
+                    - generic [ref=f3e522]: 2FA Active
+                    - generic [ref=f3e526]: ·
+                    - generic [ref=f3e527]: 45 mins ago
+              - cell "Administrator" [ref=f3e528]:
+                - combobox [ref=f3e529]:
+                  - option "Super Admin"
+                  - option "Administrator" [selected]
+                  - option "Support Agent"
+                  - option "Analyst"

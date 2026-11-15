@@ -1,12 +1,10 @@
 export type KnowledgeTab =
   | 'sources'
-  | 'faqs'
   | 'policies'
   | 'catalogue'
   | 'brand'
   | 'jobs'
-  | 'testing'
-  | 'versions';
+  | 'testing';
 
 export interface BrandIdentityKnowledge {
   tagline: string;
@@ -76,7 +74,21 @@ export type PolicyCategory =
   | 'Discounts and promotional offers'
   | 'Customer eligibility'
   | 'Complaints and escalation'
-  | 'Privacy and customer data';
+  | 'Privacy and customer data'
+  | 'General operations'
+  | 'Products and services'
+  | 'Sales and pricing'
+  | 'Human resources'
+  | 'Workplace health and safety'
+  | 'Finance and accounting'
+  | 'Legal and compliance'
+  | 'Information security'
+  | 'Facilities and equipment'
+  | 'Procurement and suppliers'
+  | 'Quality assurance'
+  | 'Marketing and communications'
+  | 'Travel and expenses'
+  | 'Environmental and sustainability';
 
 export interface BusinessPolicy {
   id: string;
@@ -85,6 +97,7 @@ export interface BusinessPolicy {
   fullText: string;
   rulesAndExceptions: string[];
   effectiveDate: string;
+  permanent?: boolean;
   reviewDate?: string;
   publicationStatus: 'Published' | 'Draft' | 'Under Review';
   approvalStatus: 'Approved' | 'Pending Approval';
@@ -106,6 +119,7 @@ export interface ProductRecord {
   inventoryStatus: 'In Stock' | 'Low Stock' | 'Out of Stock' | 'Live API Verified';
   stockCount: number;
   imageUrl?: string;
+  imageUrls?: string[];
   shippingRestrictions?: string;
   warrantyInfo?: string;
   productUrl?: string;
@@ -116,7 +130,7 @@ export interface TrainingJob {
   id: string;
   sourceName: string;
   jobType: 'Initial Indexing' | 'Re-index' | 'Scheduled Sync' | 'Chunk Embeddings';
-  status: 'running' | 'completed' | 'failed' | 'queued';
+  status: 'running' | 'completed' | 'failed' | 'queued' | 'cancelled';
   documentsProcessed: number;
   totalDocuments: number;
   recordsSkipped: number;
@@ -141,13 +155,3 @@ export interface TestCase {
   testedAt: string;
 }
 
-export interface KnowledgeSnapshot {
-  version: string;
-  label: string;
-  state: 'production' | 'staging' | 'archived';
-  publishedAt: string;
-  publishedBy: string;
-  sourcesCount: number;
-  totalChunks: number;
-  changeSummary: string;
-}

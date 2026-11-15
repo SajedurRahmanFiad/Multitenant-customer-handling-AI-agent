@@ -109,22 +109,11 @@ export const INITIAL_PIPELINE_LAYERS: PipelineLayerConfig[] = [
 
 export const INITIAL_IDENTITY: AgentIdentityConfig = {
   agentName: 'Aria (Support Assistant)',
-  businessName: 'Nexura Lifestyle & Electronics',
-  welcomeMessage:
-    'আসসালামু আলাইকুম! Nexura Lifestyle-এ আপনাকে স্বাগতম। আমি কীভাবে আপনাকে সাহায্য করতে পারি? (Hello! Welcome to Nexura. How can I assist you today?)',
   supportedLanguages: ['Bangla', 'English', 'Banglish'],
   primaryLanguage: 'Bangla',
   tone: 'friendly',
   emojiUsage: 'minimal',
   messageLength: 'balanced',
-  returningCustomerGreeting: 'personalized',
-  returningCustomerTemplate:
-    'স্বাগতম ফিরে আসার জন্য, {customer_name}! আপনার বিগত অর্ডার অথবা অন্য কোনো বিষয়ে কি সহায়তা প্রয়োজন?',
-  discloseAiIdentity: true,
-  disclosureStatement: 'I am Nexura AI assistant, collaborating with our live support staff.',
-  brandTerms: ['Nexura Care', 'ট্রানজিট গ্যারান্টি', 'অফিসিয়াল ওয়ারেন্টি', 'bKash মার্চেন্ট'],
-  forbiddenTerms: ['সস্তা', 'ফালতু', 'কোনো গ্যারান্টি নাই', 'cheap deal', 'হ্যাক'],
-  signatureSignOff: '— Nexura Digital Support Team',
 };
 
 export const INITIAL_INSTRUCTIONS: SystemInstructionsConfig = {
@@ -132,6 +121,7 @@ export const INITIAL_INSTRUCTIONS: SystemInstructionsConfig = {
     'Provide prompt, accurate, and courteous customer support for product inquiries, shipping rates, bKash payments, order tracking, and warranty claims across Messenger and WhatsApp.',
   businessDescription:
     'Nexura is a premier lifestyle and consumer electronics brand in Bangladesh, providing high-quality accessories, smart gadgets, and winter apparel with island-wide courier coverage.',
+  communicationGuidelines: '',
   supportedTopics: [
     'Product specifications and variant availability',
     'Delivery timeframes (Dhaka inside 24-48h, outside 48-72h)',
@@ -168,6 +158,8 @@ export const INITIAL_INSTRUCTIONS: SystemInstructionsConfig = {
 export const INITIAL_BEHAVIOR: ConversationBehaviorConfig = {
   immediateGreeting: true,
   greetingDelaySeconds: 2,
+  welcomeMessage:
+    'আসসালামু আলাইকুম! Nexura Lifestyle-এ আপনাকে স্বাগতম। আমি কীভাবে আপনাকে সাহায্য করতে পারি? (Hello! Welcome to Nexura. How can I assist you today?)',
   proactivelySuggestProducts: true,
   productSuggestionTrigger: 'browse_intent',
   collectContactDetails: true,

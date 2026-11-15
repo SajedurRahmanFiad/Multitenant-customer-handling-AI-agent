@@ -14,7 +14,6 @@ export type GranularPermission =
   | 'publish_policies'
   | 'manage_integrations'
   | 'change_ai_config'
-  | 'access_analytics'
   | 'export_customer_data'
   | 'manage_team'
   | 'view_billing';
@@ -78,13 +77,6 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     isRestricted: true,
   },
   {
-    id: 'access_analytics',
-    name: 'Access Analytics',
-    category: 'Integrations & Admin',
-    description: 'View resolution rates, conversation volume, and agent performance reports',
-    isRestricted: false,
-  },
-  {
     id: 'export_customer_data',
     name: 'Export Customer Data',
     category: 'Data & Billing',
@@ -116,7 +108,6 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<TeamRole, GranularPermission[]> = 
     'publish_policies',
     'manage_integrations',
     'change_ai_config',
-    'access_analytics',
     'export_customer_data',
     'manage_team',
     'view_billing',
@@ -129,11 +120,10 @@ export const ROLE_DEFAULT_PERMISSIONS: Record<TeamRole, GranularPermission[]> = 
     'publish_policies',
     'manage_integrations',
     'change_ai_config',
-    'access_analytics',
     'manage_team',
   ],
   agent: ['read_conversations', 'send_messages', 'takeover_ai', 'edit_knowledge'],
-  analyst: ['read_conversations', 'access_analytics'],
+  analyst: ['read_conversations'],
 };
 
 export interface TeamMember {
@@ -144,7 +134,6 @@ export interface TeamMember {
   tenantName: string;
   avatarUrl?: string;
   role: TeamRole;
-  department: string;
   assignedChannels: ('messenger' | 'whatsapp')[];
   status: AccountStatus;
   twoFactorEnabled: boolean;

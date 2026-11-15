@@ -1,0 +1,36 @@
+- generic [ref=f7e3]:
+  - banner [ref=f7e4]:
+    - generic [ref=f7e5]:
+      - generic [ref=f7e6]: S
+      - generic [ref=f7e7]:
+        - generic [ref=f7e8]: Support API
+        - generic [ref=f7e9]: Overview
+    - button "Close navigation" [active] [ref=f7e17]
+  - generic [ref=f7e23]:
+    - generic [ref=f7e24]:
+      - generic [ref=f7e25]:
+        - generic [ref=f7e26]: Sajedur Rahman
+        - generic [ref=f7e27]: Platform (super admin)
+      - button [ref=f7e28]
+    - generic [ref=f7e32]:
+      - text: Switch Active Tenant (Super Admin)
+      - combobox [ref=f7e33]:
+        - option "🌐 All Platform Tenants" [selected]
+        - option "Cymbah Ltd."
+        - option "Dhaka Pharma & Care"
+        - option "Bengal Loom & Crafts"
+        - option "Gadget Express BD"
+    - generic [ref=f7e34]:
+      - button "Overview" [ref=f7e35]
+      - button "Inbox" [ref=f7e42]
+      - button "AI Knowledge" [ref=f7e47]
+      - button "Agent Configuration" [ref=f7e51]
+      - button "Channels & Integrations" [ref=f7e56]
+      - button "Team & Permissions" [ref=f7e64]
+      - button "Settings" [ref=f7e71]
+      - button "Platform Admin" [ref=f7e76]
+    - button "Sign out" [ref=f7e81]
+  - main [ref=f7e13]:
+    - generic [ref=f7e14]:
+      - heading "Select a specific tenant" [level=2] [ref=f7e15]
+      - paragraph [ref=f7e16]: Choose a tenant from the sidebar to view this page.

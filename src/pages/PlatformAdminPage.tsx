@@ -1,60 +1,49 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   Building2,
   Cpu,
-  DollarSign,
   Layers,
-  Activity,
-  ShieldCheck,
   Coins,
+  Server,
 } from 'lucide-react';
 import { SubPageNav, SubPageTabItem } from '../components/navigation/SubPageNav';
 import {
   PlatformAdminTab,
   SupportSessionSession,
   AIProviderModel,
-  PlatformFinancialMetrics,
-  DeadLetterJob,
   TenantClient,
   GlobalPipelineLayer,
+  QueueMetrics,
+  DeadLetterJob,
 } from '../types/platformAdmin';
-import {
-  INITIAL_TENANTS,
-  INITIAL_PROVIDER_MODELS,
-  INITIAL_PLATFORM_METRICS,
-  INITIAL_TOP_TENANTS,
-  INITIAL_QUEUE_METRICS,
-  INITIAL_DEAD_LETTER_JOBS,
-  INITIAL_SYSTEM_COMPONENTS,
-  INITIAL_INCIDENTS,
-  INITIAL_COMPLIANCE_REPORT,
-  INITIAL_GLOBAL_PIPELINE_LAYERS,
-} from '../data/platformAdminMockData';
+import { api } from '../lib/api';
+import { useApiData } from '../hooks/useApiData';
 
 import { TenantsManagementView } from '../components/platform-admin/TenantsManagementView';
 import { CurrencyManagementView } from '../components/platform-admin/CurrencyManagementView';
 import { GlobalPipelineAdminView } from '../components/platform-admin/GlobalPipelineAdminView';
 import { AIProviderRegistryView } from '../components/platform-admin/AIProviderRegistryView';
-import { UsageCostControlView } from '../components/platform-admin/UsageCostControlView';
 import { InfrastructureQueuesView } from '../components/platform-admin/InfrastructureQueuesView';
-import { SystemHealthAlertsView } from '../components/platform-admin/SystemHealthAlertsView';
-import { SecurityComplianceView } from '../components/platform-admin/SecurityComplianceView';
 import { useCurrency } from '../context/CurrencyContext';
+import { useUrlQueryState } from '../hooks/useUrlQueryState';
 
 
 export const PlatformAdminPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<PlatformAdminTab>('tenants');
+  const [activeTab, setActiveTab] = useUrlQueryState<PlatformAdminTab>('tab', 'tenants', [
+    'tenants', 'currencies', 'global_pipeline', 'provider_registry', 'queues',
+  ]);
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const {
     currencies,
+    exchangeRatesByCode,
+    exchangeRatesStatus,
     platformDefaultCurrencyCode,
     addCurrency,
     updateCurrency,
     deleteCurrency,
     setPlatformDefaultCurrency,
     setTenantCurrency,
-    setTenantPricing,
   } = useCurrency();
 
   const showToast = (msg: string) => {
@@ -63,23 +52,25 @@ export const PlatformAdminPage: React.FC = () => {
   };
 
   // State
-  const [tenants, setTenants] = useState<TenantClient[]>(INITIAL_TENANTS);
-  const [globalLayers, setGlobalLayers] = useState<GlobalPipelineLayer[]>(INITIAL_GLOBAL_PIPELINE_LAYERS);
+  const [tenants, setTenants] = useState<TenantClient[]>([]);
+  const [globalLayers, setGlobalLayers] = useState<GlobalPipelineLayer[]>([]);
   const [supportSession, setSupportSession] = useState<SupportSessionSession>({
     isActive: false,
   });
 
-  const [models, setModels] = useState<AIProviderModel[]>(INITIAL_PROVIDER_MODELS);
-  const [financialMetrics, setFinancialMetrics] = useState<PlatformFinancialMetrics>(INITIAL_PLATFORM_METRICS);
-  const [topTenants, setTopTenants] = useState(INITIAL_TOP_TENANTS);
-  const [queueMetrics, setQueueMetrics] = useState(INITIAL_QUEUE_METRICS);
-  const [dlqJobs, setDlqJobs] = useState<DeadLetterJob[]>(INITIAL_DEAD_LETTER_JOBS);
+  const [models, setModels] = useState<AIProviderModel[]>([]);
+  const tenantsQ=useApiData<{tenants:TenantClient[]}>('/platform/tenants');
+  const pipelineQ=useApiData<{layers:GlobalPipelineLayer[]}>('/platform/global-pipeline');
+  const providersQ=useApiData<{models:AIProviderModel[]}>('/platform/providers');
+  const supportQ=useApiData<{session:SupportSessionSession|null}>('/platform/support-session');
+  const queuesQ=useApiData<{metrics:QueueMetrics;deadLetterJobs:DeadLetterJob[]}>('/platform/queues');
+  useEffect(()=>{if(tenantsQ.data)setTenants(tenantsQ.data.tenants);},[tenantsQ.data]);
+  useEffect(()=>{if(pipelineQ.data)setGlobalLayers(pipelineQ.data.layers);},[pipelineQ.data]);
+  useEffect(()=>{if(providersQ.data)setModels(providersQ.data.models);},[providersQ.data]);
+  useEffect(()=>{setSupportSession(supportQ.data?.session??{isActive:false});},[supportQ.data]);
 
   const handleUpdateTenantCurrency = (tenantId: string, currencyCode: string) => {
-    setTenantCurrency(tenantId, currencyCode);
-    setTenants((prev) =>
-      prev.map((t) => (t.id === tenantId ? { ...t, currencyCode } : t))
-    );
+    api.patch(`/platform/tenants/${tenantId}`,{currencyCode}).then(()=>{setTenantCurrency(tenantId,currencyCode);tenantsQ.reload();}).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not update tenant currency'));
   };
 
   // Tabs config using SubPageTabItem (No commercial plans tab)
@@ -95,14 +86,13 @@ export const PlatformAdminPage: React.FC = () => {
       id: 'currencies',
       label: 'Currency System & Rates',
       icon: Coins,
-      badge: `${currencies.length} Currencies`,
+      badge: `${currencies.length}`,
       group: 'CLIENTS & TENANTS',
     },
     {
       id: 'global_pipeline',
       label: 'Global Pipeline Layers',
       icon: Layers,
-      badge: `${globalLayers.length} Layers`,
       group: 'INFRASTRUCTURE & ORCHESTRATION',
     },
 
@@ -113,106 +103,70 @@ export const PlatformAdminPage: React.FC = () => {
       badge: 'KMS',
       group: 'INFRASTRUCTURE & ORCHESTRATION',
     },
-    {
-      id: 'cost_control',
-      label: 'Usage & Cost Control',
-      icon: DollarSign,
-      group: 'INFRASTRUCTURE & ORCHESTRATION',
-    },
+    { id:'queues',label:'Queues & Failed Jobs',icon:Server,group:'INFRASTRUCTURE & ORCHESTRATION' },
 
-    {
-      id: 'infrastructure_queues',
-      label: 'Queues & BullMQ',
-      icon: Layers,
-      count: dlqJobs.length > 0 ? dlqJobs.length : undefined,
-      badgeVariant: dlqJobs.length > 0 ? 'warning' : undefined,
-      group: 'INFRASTRUCTURE & ORCHESTRATION',
-    },
-    {
-      id: 'system_health',
-      label: 'System Health & SLA',
-      icon: Activity,
-      badge: '99.98%',
-      badgeVariant: 'success',
-      group: 'OPERATIONS & COMPLIANCE',
-    },
-    {
-      id: 'security_compliance',
-      label: 'Security & Canaries',
-      icon: ShieldCheck,
-      group: 'OPERATIONS & COMPLIANCE',
-    },
   ];
 
   // Handlers for Tenants
-  const handleToggleTenantStatus = (id: string) => {
-    setTenants((prev) =>
-      prev.map((t) => {
-        if (t.id === id) {
-          const nextStatus = t.status === 'suspended' ? 'active' : 'suspended';
-          return { ...t, status: nextStatus };
-        }
-        return t;
-      })
-    );
+  const handleToggleTenantStatus = (id: string, status?: 'active'|'suspended') => {
+    const tenant=tenants.find(t=>t.id===id); if(!tenant)return;
+    api.patch(`/platform/tenants/${id}`,{status:status??(tenant.status==='suspended'?'active':'suspended')}).then(()=>tenantsQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not update tenant'));
+  };
+
+  const handleUpdateTenant = (tenantId: string, updates: Pick<TenantClient, 'businessName' | 'ownerName' | 'ownerEmail' | 'ownerPhone'>) => {
+    api.patch(`/platform/tenants/${tenantId}`, updates).then(() => {
+      tenantsQ.reload();
+      showToast('Tenant updated');
+    }).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not update tenant'));
+  };
+
+  const handleDeleteTenant = (tenantId: string) => {
+    const tenant = tenants.find((item) => item.id === tenantId);
+    api.del(`/platform/tenants/${tenantId}`).then(() => {
+      tenantsQ.reload();
+      showToast(`${tenant?.businessName ?? 'Tenant'} deleted`);
+    }).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not delete tenant'));
   };
 
   const handleStartSupportSession = (tenantId: string, reason: string, durationMinutes: number) => {
     const tenant = tenants.find((t) => t.id === tenantId);
     if (!tenant) return;
 
-    setSupportSession({
-      isActive: true,
-      tenantId: tenant.id,
-      tenantName: tenant.businessName,
-      adminName: 'Sajedur Rahman (Super Admin)',
-      reason,
-      startedAt: 'Just now',
-      expiresAt: `In ${durationMinutes} minutes`,
-      auditSessionId: `aud_sess_${Math.random().toString(36).substring(2, 9)}`,
-    });
+    api.post('/platform/support-session',{tenantId:tenant.id,reason,durationMinutes}).then(()=>supportQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not start support session'));
   };
 
   const handleEndSupportSession = () => {
-    setSupportSession({ isActive: false });
+    api.post('/platform/support-session/end',{id:supportSession.auditSessionId}).then(()=>supportQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not end support session'));
   };
 
   // Handlers for Models
   const handleToggleModelStatus = (modelId: string) => {
-    setModels((prev) =>
-      prev.map((m) =>
-        m.id === modelId
-          ? { ...m, status: m.status === 'active' ? 'disabled' : 'active' }
-          : m
-      )
-    );
+    const model=models.find(m=>m.id===modelId);if(!model)return;
+    api.patch(`/platform/providers/${modelId}`,{status:model.status==='active'?'disabled':'active'}).then(()=>providersQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not update model'));
+  };
+
+  const handleSaveModel = (updatedModel: AIProviderModel) => {
+    const alreadyRegistered = models.some((model) => model.id === updatedModel.id);
+    const payload: Partial<AIProviderModel>={...updatedModel};
+    if(alreadyRegistered && updatedModel.apiKey.includes('•')) delete payload.apiKey;
+    const req=alreadyRegistered?api.patch(`/platform/providers/${updatedModel.id}`,payload):api.post('/platform/providers',payload);
+    req.then(()=>{providersQ.reload();showToast(alreadyRegistered ? `${updatedModel.displayName} updated` : `${updatedModel.displayName} registered`);}).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not save model'));
+  };
+
+  const handleDeleteModel = (modelId: string) => {
+    const model = models.find((registeredModel) => registeredModel.id === modelId);
+    api.del(`/platform/providers/${modelId}`).then(() => {
+      providersQ.reload();
+      showToast(`${model?.displayName ?? 'Model'} deleted`);
+    }).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not delete model'));
   };
 
   const handleSetDefaultModel = (modelId: string) => {
-    setModels((prev) =>
-      prev.map((m) => ({
-        ...m,
-        isDefault: m.id === modelId,
-      }))
-    );
+    api.patch(`/platform/providers/${modelId}`,{isDefault:true}).then(()=>providersQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not set default model'));
   };
 
   const handleSetFallbackModel = (modelId: string) => {
-    setModels((prev) =>
-      prev.map((m) => ({
-        ...m,
-        isFallback: m.id === modelId,
-      }))
-    );
-  };
-
-  // Handlers for DLQ
-  const handleRetryDlqJob = (jobId: string) => {
-    setDlqJobs((prev) => prev.filter((j) => j.id !== jobId));
-  };
-
-  const handleDismissDlqJob = (jobId: string) => {
-    setDlqJobs((prev) => prev.filter((j) => j.id !== jobId));
+    api.patch(`/platform/providers/${modelId}`,{isFallback:true}).then(()=>providersQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not set fallback model'));
   };
 
   return (
@@ -236,19 +190,10 @@ export const PlatformAdminPage: React.FC = () => {
               }
               onEndSupportSession={handleEndSupportSession}
               onToggleStatus={(tenantId) => handleToggleTenantStatus(tenantId)}
+              onUpdateTenant={handleUpdateTenant}
+              onDeleteTenant={handleDeleteTenant}
               onCreateTenant={(newTenant) => {
-                const newId = `ten_${Date.now().toString(36)}`;
-                const created: TenantClient = {
-                  ...newTenant,
-                  id: newId,
-                  createdAt: 'Just now',
-                };
-                setTenants((prev) => [created, ...prev]);
-                if (newTenant.currencyCode) {
-                  setTenantCurrency(newId, newTenant.currencyCode);
-                }
-                setTenantPricing(newId, newTenant.pricePerMessage, newTenant.walletBalance);
-                showToast(`Provisioned tenant "${created.businessName}" with ${newTenant.currencyCode} wallet.`);
+                api.post<{tenant:TenantClient}>('/platform/tenants',newTenant).then(({tenant})=>{tenantsQ.reload();showToast(`Provisioned tenant "${tenant.businessName}".`);}).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not create tenant'));
               }}
             />
           )}
@@ -256,6 +201,8 @@ export const PlatformAdminPage: React.FC = () => {
           {activeTab === 'currencies' && (
             <CurrencyManagementView
               currencies={currencies}
+              exchangeRatesByCode={exchangeRatesByCode}
+              exchangeRatesStatus={exchangeRatesStatus}
               tenants={tenants}
               platformDefaultCurrencyCode={platformDefaultCurrencyCode}
               onAddCurrency={addCurrency}
@@ -272,11 +219,7 @@ export const PlatformAdminPage: React.FC = () => {
             <GlobalPipelineAdminView
               layers={globalLayers}
               availableModels={models}
-              onSaveLayer={(updated) => {
-                setGlobalLayers((prev) =>
-                  prev.map((l) => (l.id === updated.id ? updated : l))
-                );
-              }}
+              onSaveLayer={(updated) => { api.patch(`/platform/global-pipeline/${updated.id}`,updated).then(()=>{pipelineQ.reload();showToast(`Saved ${updated.title}`);}).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not save layer')); }}
               onShowToast={showToast}
             />
           )}
@@ -284,42 +227,16 @@ export const PlatformAdminPage: React.FC = () => {
           {activeTab === 'provider_registry' && (
             <AIProviderRegistryView
               models={models}
+              onSaveModel={handleSaveModel}
+              onDeleteModel={handleDeleteModel}
               onToggleStatus={handleToggleModelStatus}
               onSetDefault={handleSetDefaultModel}
               onSetFallback={handleSetFallbackModel}
             />
           )}
 
+          {activeTab==='queues' && queuesQ.data && <InfrastructureQueuesView metrics={queuesQ.data.metrics} dlqJobs={queuesQ.data.deadLetterJobs} onRetryDlqJob={id=>api.post(`/platform/queues/dlq/${id}/retry`,{}).then(()=>queuesQ.reload()).catch((e:unknown)=>{showToast(e instanceof Error?e.message:'Could not retry job');})} onDismissDlqJob={id=>api.post(`/platform/queues/dlq/${id}/dismiss`,{}).then(()=>queuesQ.reload()).catch((e:unknown)=>showToast(e instanceof Error?e.message:'Could not dismiss job'))}/>}
 
-          {activeTab === 'cost_control' && (
-            <UsageCostControlView
-              metrics={financialMetrics}
-              topTenants={topTenants}
-              onUpdatePolicy={(policy) =>
-                setFinancialMetrics((prev) => ({ ...prev, anomalyProtectionPolicy: policy }))
-              }
-            />
-          )}
-
-          {activeTab === 'infrastructure_queues' && (
-            <InfrastructureQueuesView
-              metrics={queueMetrics}
-              dlqJobs={dlqJobs}
-              onRetryDlqJob={handleRetryDlqJob}
-              onDismissDlqJob={handleDismissDlqJob}
-            />
-          )}
-
-          {activeTab === 'system_health' && (
-            <SystemHealthAlertsView
-              components={INITIAL_SYSTEM_COMPONENTS}
-              incidents={INITIAL_INCIDENTS}
-            />
-          )}
-
-          {activeTab === 'security_compliance' && (
-            <SecurityComplianceView report={INITIAL_COMPLIANCE_REPORT} />
-          )}
         </div>
       </div>
 

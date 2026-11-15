@@ -1,0 +1,153 @@
+- generic [ref=f3e3]:
+  - banner [ref=f3e4]:
+    - generic [ref=f3e5]:
+      - generic [ref=f3e6]: S
+      - generic [ref=f3e7]:
+        - generic [ref=f3e8]: Support API
+        - generic [ref=f3e9]: Channels & Integrations
+    - button "Open navigation" [ref=f3e10]
+  - main [ref=f3e13]:
+    - generic [ref=f3e15]:
+      - generic [ref=f3e18]:
+        - button "Messenger" [ref=f3e19] [cursor=pointer]
+        - button "WhatsApp Business" [ref=f3e24] [cursor=pointer]
+        - button "Webhooks & Delivery 6" [ref=f3e29] [cursor=pointer]:
+          - generic [ref=f3e32]: Webhooks & Delivery
+          - generic [ref=f3e33]: "6"
+        - button "Business Systems 4 Active" [ref=f3e34] [cursor=pointer]:
+          - generic [ref=f3e39]: Business Systems
+          - generic [ref=f3e40]: 4 Active
+        - button "Health & Fallback 99.98%" [ref=f3e41] [cursor=pointer]:
+          - generic [ref=f3e45]: Health & Fallback
+          - generic [ref=f3e46]: 99.98%
+      - generic [ref=f3e48]:
+        - generic [ref=f3e49]:
+          - generic [ref=f3e50]:
+            - generic [ref=f3e58]:
+              - generic [ref=f3e59]:
+                - heading [level=3] [ref=f3e60]:
+                  - text: Nexura Lifestyle
+                  - generic [ref=f3e61]: Official Green Tick Verified
+                - generic [ref=f3e65]: Cloud API Active
+              - generic [ref=f3e67]:
+                - strong [ref=f3e71]: +880 1819-204920
+                - generic [ref=f3e72]: •
+                - generic [ref=f3e73]:
+                  - text: "Phone ID:"
+                  - strong [ref=f3e74]: "104920491829301"
+                - generic [ref=f3e75]: •
+                - generic [ref=f3e76]:
+                  - text: "WABA ID:"
+                  - strong [ref=f3e77]: "719204918294018"
+            - generic [ref=f3e78]:
+              - button "Test WhatsApp Ping" [ref=f3e79]
+              - button "Rotate Credentials" [ref=f3e87]
+              - button "Disconnect WABA" [ref=f3e94]
+          - generic [ref=f3e95]:
+            - generic [ref=f3e96]:
+              - generic [ref=f3e97]: Quality Rating
+              - generic [ref=f3e100]:
+                - generic [ref=f3e101]: GREEN
+                - generic [ref=f3e102]: (High Quality)
+              - paragraph [ref=f3e103]: Zero policy violation strikes
+            - generic [ref=f3e104]:
+              - generic [ref=f3e105]: Messaging Tier Limit
+              - generic [ref=f3e106]: 10,000 / 24 Hours
+              - paragraph [ref=f3e109]: 1,248 used today (12.5%)
+            - generic [ref=f3e110]:
+              - generic [ref=f3e111]: Inbound / Outbound
+              - generic [ref=f3e112]:
+                - generic [ref=f3e113]:
+                  - generic [ref=f3e114]: "Inbound:"
+                  - generic [ref=f3e115]: 1 minute ago
+                - generic [ref=f3e116]:
+                  - generic [ref=f3e117]: "Outbound:"
+                  - generic [ref=f3e118]: 2 minutes ago
+              - paragraph [ref=f3e119]: Cloud API webhook synced
+            - generic [ref=f3e120]:
+              - generic [ref=f3e121]: Cloud Throughput
+              - generic [ref=f3e122]: 80 msg / sec
+              - paragraph [ref=f3e123]: Dedicated Meta edge queue
+              - text: Zero Backpressure
+        - generic [ref=f3e124]:
+          - generic [ref=f3e125]:
+            - generic [ref=f3e126]:
+              - heading "Pre-Approved Message Templates (4)" [level=4] [ref=f3e131]
+              - button "Sync Meta Templates" [ref=f3e132]
+            - paragraph [ref=f3e139]: WhatsApp requires pre-approved HSM templates for sending proactive notifications (order confirmations, delivery dispatches, and customer care re-engagement outside the 24-hour service window).
+            - generic [ref=f3e140]:
+              - generic [ref=f3e141] [cursor=pointer]:
+                - generic [ref=f3e142]:
+                  - generic [ref=f3e143]:
+                    - generic [ref=f3e144]: order_confirmation_v2
+                    - generic [ref=f3e145]: APPROVED
+                    - generic [ref=f3e146]: UTILITY
+                  - generic [ref=f3e147]: Updated Oct 12, 2026
+                - paragraph [ref=f3e148]: "\"প্রিয় {{1}}, Nexura Lifestyle-এ আপনার অর্ডার #{{2}} সফলভাবে নিশ্চিত হয়েছে। মোট মূল্য: {{3}} টাকা।\""
+                - generic [ref=f3e149]:
+                  - generic [ref=f3e150]:
+                    - text: "Language:"
+                    - strong [ref=f3e151]: bn (Bengali)
+                  - generic [ref=f3e152]: View Dynamic Parameters
+              - generic [ref=f3e155] [cursor=pointer]:
+                - generic [ref=f3e156]:
+                  - generic [ref=f3e157]:
+                    - generic [ref=f3e158]: delivery_tracking_update
+                    - generic [ref=f3e159]: APPROVED
+                    - generic [ref=f3e160]: UTILITY
+                  - generic [ref=f3e161]: Updated Oct 15, 2026
+                - paragraph [ref=f3e162]: "\"আপনার অর্ডার #{{1}} স্টেডফাস্ট কুরিয়ারে হস্তান্তর করা হয়েছে। ট্র্যাকিং কোড: {{2}}।\""
+                - generic [ref=f3e163]:
+                  - generic [ref=f3e164]:
+                    - text: "Language:"
+                    - strong [ref=f3e165]: bn (Bengali)
+                  - generic [ref=f3e166]: View Dynamic Parameters
+              - generic [ref=f3e169] [cursor=pointer]:
+                - generic [ref=f3e170]:
+                  - generic [ref=f3e171]:
+                    - generic [ref=f3e172]: agent_staff_takeover
+                    - generic [ref=f3e173]: APPROVED
+                    - generic [ref=f3e174]: UTILITY
+                  - generic [ref=f3e175]: Updated Sep 28, 2026
+                - paragraph [ref=f3e176]: "\"আমাদের কাস্টমার কেয়ার প্রতিনিধি {{1}} এখন আপনার সাথে সরাসরি কথা বলছেন। একটু অপেক্ষা করুন।\""
+                - generic [ref=f3e177]:
+                  - generic [ref=f3e178]:
+                    - text: "Language:"
+                    - strong [ref=f3e179]: bn (Bengali)
+                  - generic [ref=f3e180]: View Dynamic Parameters
+              - generic [ref=f3e183] [cursor=pointer]:
+                - generic [ref=f3e184]:
+                  - generic [ref=f3e185]:
+                    - generic [ref=f3e186]: seasonal_collection_preview
+                    - generic [ref=f3e187]: APPROVED
+                    - generic [ref=f3e188]: MARKETING
+                  - generic [ref=f3e189]: Updated Oct 20, 2026
+                - paragraph [ref=f3e190]: "\"Hello {{1}}, explore our newest Panjabi and Kurti collection before stock runs out!\""
+                - generic [ref=f3e191]:
+                  - generic [ref=f3e192]:
+                    - text: "Language:"
+                    - strong [ref=f3e193]: en (English)
+                  - generic [ref=f3e194]: View Dynamic Parameters
+          - generic [ref=f3e197]:
+            - generic [ref=f3e198]:
+              - heading "Security & Meta Vault" [level=4] [ref=f3e203]
+              - generic [ref=f3e204]: Zero Leakage
+            - generic [ref=f3e205]:
+              - generic [ref=f3e206]: Token Masking Active
+              - paragraph [ref=f3e211]: Permanent system user access tokens are hidden from ordinary workspace members. Only admins can replace tokens via authenticated rotation.
+            - generic [ref=f3e212]:
+              - generic [ref=f3e213]:
+                - generic [ref=f3e214]: "Token Mask:"
+                - generic [ref=f3e215]: EAABk81...w0Q4
+              - generic [ref=f3e216]:
+                - generic [ref=f3e217]: "Token Type:"
+                - generic [ref=f3e218]: System User Permanent Token
+              - generic [ref=f3e219]:
+                - generic [ref=f3e220]: "Business Manager ID:"
+                - generic [ref=f3e221]: "992019401928401"
+              - generic [ref=f3e222]:
+                - generic [ref=f3e223]: "Last Verified:"
+                - generic [ref=f3e224]: Oct 01, 2026
+            - generic [ref=f3e225]:
+              - generic [ref=f3e226]: Auto-Recovery & Fallback
+              - paragraph [ref=f3e227]: If WhatsApp Cloud API reports a temporary network timeout, all inbound customer messages are automatically buffered in our idempotent queue with zero loss.

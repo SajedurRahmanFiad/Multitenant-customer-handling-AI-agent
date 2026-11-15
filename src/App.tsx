@@ -1,10 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { PageId } from './types/navigation';
-import { CurrentUser, DEMO_USERS } from './types/auth';
-import { TeamMember, TeamRole, UserSession, AdminActionRecord } from './types/team';
+import { CurrentUser } from './types/auth';
+import { TeamMember, UserSession, AdminActionRecord } from './types/team';
 import { TenantClient } from './types/platformAdmin';
-import { INITIAL_TEAM_MEMBERS, INITIAL_USER_SESSIONS, INITIAL_ADMIN_ACTIONS } from './data/teamMockData';
-import { INITIAL_TENANTS } from './data/platformAdminMockData';
 
 import { FloatingSidebar } from './components/navigation/FloatingSidebar';
 import { MobileHeader } from './components/navigation/MobileHeader';
@@ -15,171 +14,211 @@ import { InboxPage } from './pages/InboxPage';
 import { KnowledgePage } from './pages/KnowledgePage';
 import { AgentConfigPage } from './pages/AgentConfigPage';
 import { ChannelsPage } from './pages/ChannelsPage';
-import { AnalyticsPage } from './pages/AnalyticsPage';
 import { TeamPage } from './pages/TeamPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { PlatformAdminPage } from './pages/PlatformAdminPage';
 import { useCurrency } from './context/CurrencyContext';
+import { useAuth } from './context/AuthContext';
+import { useApiData } from './hooks/useApiData';
+import { api, setApiTenant } from './lib/api';
+
+const PAGE_PATHS: Record<PageId, string> = {
+  overview: '/overview',
+  inbox: '/inbox',
+  knowledge: '/knowledge',
+  agent: '/agent',
+  channels: '/channels',
+  team: '/team',
+  settings: '/settings',
+  platform_admin: '/platform-admin',
+};
 
 export default function App() {
+  const { user, logout, booting, availableTenants, refresh } = useAuth();
   const { setSelectedTenantId: setCurrencyTenantId } = useCurrency();
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Authentication & Session State
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(true);
-  const [currentUser, setCurrentUser] = useState<CurrentUser>(DEMO_USERS[0]); // Default: Sajedur Rahman (super_admin)
-  const [selectedTenantId, setSelectedTenantId] = useState<string>('ten_loom_01');
+  // Tenant selection: URL param wins, otherwise "all" for super admins.
+  const [selectedTenantId, setSelectedTenantId] = useState<string>(
+    () => new URLSearchParams(window.location.search).get('tenant') || 'all'
+  );
+
+  // Keep the module-level API tenant header in sync before children fetch.
+  setApiTenant(selectedTenantId === 'all' ? null : selectedTenantId);
 
   const handleSelectTenant = (tenantId: string) => {
     setSelectedTenantId(tenantId);
     setCurrencyTenantId(tenantId);
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set('tenant', tenantId);
+    navigate({ pathname: location.pathname, search: `?${searchParams.toString()}` }, { replace: true });
   };
 
-  // Navigation State
-  const [currentPage, setCurrentPage] = useState<PageId>('overview');
-  const [isPinned, setIsPinned] = useState(false);
+  const currentPage = (Object.entries(PAGE_PATHS).find(([, path]) => path === location.pathname)?.[0] || 'overview') as PageId;
+  // Tenant-scoped data pages must select a real tenant; only platform admin is cross-tenant.
+  const allTenantPages: PageId[] = ['platform_admin', 'team'];
+  const requiresSpecificTenant = user?.role === 'super_admin'
+    && selectedTenantId === 'all'
+    && !allTenantPages.includes(currentPage);
+  const handleNavigatePage = (page: PageId) => {
+    const searchParams = new URLSearchParams();
+    searchParams.set('tenant', selectedTenantId);
+    navigate({ pathname: PAGE_PATHS[page], search: `?${searchParams.toString()}` });
+  };
 
-  // Shared Team Data
-  const [members, setMembers] = useState<TeamMember[]>(INITIAL_TEAM_MEMBERS);
-  const [sessions, setSessions] = useState<UserSession[]>(INITIAL_USER_SESSIONS);
-  const [adminActions, setAdminActions] = useState<AdminActionRecord[]>(INITIAL_ADMIN_ACTIONS);
-  const [tenants, setTenants] = useState<TenantClient[]>(INITIAL_TENANTS);
+  useEffect(() => {
+    const tenantId = new URLSearchParams(location.search).get('tenant');
+    if (tenantId && tenantId !== selectedTenantId) {
+      setSelectedTenantId(tenantId);
+      setCurrencyTenantId(tenantId);
+    }
+  }, [location.search, selectedTenantId, setCurrencyTenantId]);
 
-  // Authentication Handlers
-  const handleLogin = (user: CurrentUser) => {
-    setCurrentUser(user);
-    setIsAuthenticated(true);
-    if (user.role === 'super_admin') {
-      handleSelectTenant('all');
-    } else {
+  // Non-super-admins are locked to their own tenant once auth resolves.
+  useEffect(() => {
+    if (user && user.role !== 'super_admin' && selectedTenantId !== user.tenantId) {
       handleSelectTenant(user.tenantId);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.role, user?.tenantId]);
 
+  const [isPinned, setIsPinned] = useState(false);
 
-  const handleSignOut = () => {
-    setIsAuthenticated(false);
-  };
+  // Shared Team Data (live from API)
+  const membersQ = useApiData<{ members: TeamMember[] }>('/team/members');
+  const sessionsQ = useApiData<{ sessions: UserSession[] }>('/team/sessions');
+  const actionsQ = useApiData<{ actions: AdminActionRecord[] }>('/team/admin-actions');
+  const members = membersQ.data?.members ?? [];
+  const sessions = sessionsQ.data?.sessions ?? [];
+  const adminActions = actionsQ.data?.actions ?? [];
 
-  // Team Handlers
+  // Tenants for sidebar/header/team â€” full list for super admins.
+  const platformTenantsQ = useApiData<{ tenants: TenantClient[] }>(
+    user?.role === 'super_admin' ? '/platform/tenants' : null
+  );
+  const tenants: TenantClient[] =
+    platformTenantsQ.data?.tenants ??
+    (user
+      ? ([
+          {
+            id: user.tenantId,
+            businessName: user.tenantName,
+            ownerName: user.name,
+            ownerPhone: user.phone,
+            status: 'active',
+          } as TenantClient,
+        ])
+      : []);
+
+  // Team Handlers (API-backed)
   const handleInviteMember = (newMember: Omit<TeamMember, 'id' | 'joinedAt'>) => {
-    const created: TeamMember = {
-      ...newMember,
-      id: `usr_${Date.now()}`,
-      joinedAt: 'Just now',
-    };
-    setMembers((prev) => [created, ...prev]);
-
-    // Record admin action
-    const actionRecord: AdminActionRecord = {
-      id: `act_${Date.now()}`,
-      actorName: currentUser.name,
-      actorPhone: currentUser.phone,
-      tenantId: created.tenantId,
-      action: `Invited Member (${created.role})`,
-      targetUser: `${created.name} (${created.phone})`,
-      timestamp: 'Just now',
-      ipAddress: '103.114.98.42',
-      details: `Granted ${created.role} role for ${created.department} (${created.tenantName})`,
-    };
-    setAdminActions((prev) => [actionRecord, ...prev]);
-  };
-
-  const handleUpdateRole = (memberId: string, newRole: TeamRole) => {
-    setMembers((prev) =>
-      prev.map((m) => (m.id === memberId ? { ...m, role: newRole } : m))
-    );
-    const target = members.find((m) => m.id === memberId);
-    if (target) {
-      setAdminActions((prev) => [
+    return api
+      .post<{ tempPassword: string }>(
+        '/team/members',
         {
-          id: `act_${Date.now()}`,
-          actorName: currentUser.name,
-          actorPhone: currentUser.phone,
-          tenantId: target.tenantId,
-          action: `Changed Role to ${newRole}`,
-          targetUser: `${target.name} (${target.phone})`,
-          timestamp: 'Just now',
-          ipAddress: '103.114.98.42',
-          details: `Role updated from ${target.role} to ${newRole}`,
+          name: newMember.name,
+          phone: newMember.phone,
+          role: newMember.role,
+          assignedChannels: newMember.assignedChannels,
         },
-        ...prev,
-      ]);
-    }
+        { tenant: newMember.tenantId || selectedTenantId }
+      )
+      .then(({ tempPassword }: { tempPassword: string }) => {
+        membersQ.reload();
+        actionsQ.reload();
+        window.alert(`Member added. Share this temporary password with them securely: ${tempPassword}`);
+        return true;
+      })
+      .catch((err: unknown) => { window.alert(err instanceof Error ? err.message : 'Invite failed'); return false; });
   };
 
-  const handleRevokeSession = (sessionId: string) => {
-    setSessions((prev) => prev.filter((s) => s.id !== sessionId));
+  const handleUpdateMember = (
+    memberId: string,
+    updates: Pick<TeamMember, 'name' | 'phone' | 'role' | 'assignedChannels'>,
+    tenantId?: string
+  ) => {
+    api
+      .patch(`/team/members/${memberId}`, {
+        name: updates.name,
+        phone: updates.phone,
+        role: updates.role,
+        assignedChannels: updates.assignedChannels,
+      }, { tenant: tenantId || selectedTenantId })
+      .then(() => {
+        membersQ.reload();
+        actionsQ.reload();
+      })
+      .catch((err: unknown) => console.error('Update failed', err));
+  };
+
+  const handleUpdateSuperAdmin = (updates: { name: string; phone: string; password?: string }) =>
+    api.patch('/team/super-admin/profile', updates)
+      .then(() => refresh())
+      .catch((err: unknown) => window.alert(err instanceof Error ? err.message : 'Could not update super admin profile'));
+
+  const handleDeleteMember = (memberId: string, tenantId?: string) => {
+    api
+      .del(`/team/members/${memberId}`, { tenant: tenantId || selectedTenantId })
+      .then(() => {
+        membersQ.reload();
+        sessionsQ.reload();
+        actionsQ.reload();
+      })
+      .catch((err: unknown) => console.error('Delete failed', err));
+  };
+
+  const handleRevokeSession = (sessionId: string, tenantId?: string) => {
+    api
+      .del(`/team/sessions/${sessionId}`, { tenant: tenantId || selectedTenantId })
+      .then(() => {
+        sessionsQ.reload();
+        actionsQ.reload();
+      })
+      .catch((err: unknown) => console.error('Revoke failed', err));
   };
 
   const handleRevokeAllSessions = () => {
-    setSessions((prev) => prev.filter((s) => s.isCurrentSession));
+    api
+      .post('/team/sessions/revoke-others')
+      .then(() => {
+        sessionsQ.reload();
+        actionsQ.reload();
+      })
+      .catch((err: unknown) => console.error('Revoke-all failed', err));
   };
 
-  // If not authenticated, show pure light-mode login screen with phone and password
-  if (!isAuthenticated) {
-    return <LoginPage onLogin={handleLogin} />;
+  // Boot / login gate
+  if (booting) {
+    return (
+      <div className="min-h-screen bg-[#f8fafc] flex items-center justify-center">
+        <div className="animate-pulse text-sm text-slate-500">Loading workspaceâ€¦</div>
+      </div>
+    );
+  }
+  if (!user) {
+    return <LoginPage />;
   }
 
-  const renderCurrentPage = () => {
-    // If a non-super-admin tries to access platform_admin, redirect to overview
-    if (currentPage === 'platform_admin' && currentUser.role !== 'super_admin') {
-      return <OverviewPage onNavigate={setCurrentPage} />;
-    }
-
-    switch (currentPage) {
-      case 'overview':
-        return <OverviewPage onNavigate={setCurrentPage} />;
-      case 'inbox':
-        return <InboxPage />;
-      case 'knowledge':
-        return <KnowledgePage />;
-      case 'agent':
-        return <AgentConfigPage />;
-      case 'channels':
-        return <ChannelsPage />;
-      case 'analytics':
-        return <AnalyticsPage />;
-      case 'team':
-        return (
-          <TeamPage
-            currentUser={currentUser}
-            selectedTenantId={selectedTenantId}
-            tenants={tenants}
-            members={members}
-            sessions={sessions}
-            adminActions={adminActions}
-            onInviteMember={handleInviteMember}
-            onUpdateRole={handleUpdateRole}
-            onRevokeSession={handleRevokeSession}
-            onRevokeAllSessions={handleRevokeAllSessions}
-          />
-        );
-      case 'settings':
-        return <SettingsPage />;
-      case 'platform_admin':
-        return <PlatformAdminPage />;
-      default:
-        return <OverviewPage onNavigate={setCurrentPage} />;
-    }
-  };
+  const currentUser: CurrentUser = user;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] text-slate-900 flex flex-col">
       {/* Mobile Header (small screens) */}
       <MobileHeader
         currentPage={currentPage}
-        onSelectPage={setCurrentPage}
+        onSelectPage={handleNavigatePage}
         currentUser={currentUser}
         selectedTenantId={selectedTenantId}
         onSelectTenant={handleSelectTenant}
         tenants={tenants}
-        onSignOut={handleSignOut}
+        onSignOut={logout}
       />
 
       {/* Desktop Floating Pill-Shaped Sidebar */}
       <FloatingSidebar
         currentPage={currentPage}
-        onSelectPage={setCurrentPage}
+        onSelectPage={handleNavigatePage}
         isPinned={isPinned}
         onTogglePin={() => setIsPinned((prev) => !prev)}
         currentUser={currentUser}
@@ -195,13 +234,56 @@ export default function App() {
           isPinned ? 'lg:pl-[316px]' : 'lg:pl-28'
         }`}
       >
-        <main className="flex-1 w-full max-w-[1600px] mx-auto p-4 sm:p-6 lg:p-8 space-y-6">
+        <main
+          className={`flex-1 w-full max-w-[1600px] mx-auto ${
+            currentPage === 'inbox'
+              ? 'h-[calc(100dvh-57px)] overflow-hidden p-0 space-y-0 lg:h-auto lg:overflow-visible lg:p-8 lg:space-y-6'
+              : 'p-4 sm:p-6 lg:p-8 space-y-6'
+          }`}
+        >
           <MergedHeader
             currentUser={currentUser}
-            onNavigate={setCurrentPage}
-            onSignOut={handleSignOut}
+            onNavigate={handleNavigatePage}
+            onSignOut={logout}
           />
-          {renderCurrentPage()}
+          {requiresSpecificTenant ? (
+            <div className="min-h-[40vh] flex flex-col items-center justify-center px-6 text-center">
+              <h2 className="text-base font-semibold text-slate-900">Select a specific tenant</h2>
+              <p className="mt-2 max-w-md text-sm text-slate-500">
+                Choose a tenant from the sidebar to view this page.
+              </p>
+            </div>
+          ) : (
+            <Routes>
+              <Route path="/" element={<Navigate to="/overview" replace />} />
+              <Route path="/overview" element={<OverviewPage onNavigate={handleNavigatePage} onInviteMember={handleInviteMember} />} />
+              <Route path="/inbox" element={<InboxPage />} />
+              <Route path="/knowledge" element={<KnowledgePage />} />
+              <Route path="/agent" element={<AgentConfigPage />} />
+              <Route path="/channels" element={<ChannelsPage />} />
+              <Route path="/team" element={
+                <TeamPage
+                  currentUser={currentUser}
+                  selectedTenantId={selectedTenantId}
+                  tenants={tenants}
+                  members={members}
+                  sessions={sessions}
+                  adminActions={adminActions}
+                  onInviteMember={handleInviteMember}
+                  onUpdateMember={handleUpdateMember}
+                  onUpdateSuperAdmin={handleUpdateSuperAdmin}
+                  onDeleteMember={handleDeleteMember}
+                  onRevokeSession={handleRevokeSession}
+                  onRevokeAllSessions={handleRevokeAllSessions}
+                />
+              } />
+              <Route path="/settings" element={<SettingsPage />} />
+              <Route path="/platform-admin" element={
+                currentUser.role === 'super_admin' ? <PlatformAdminPage /> : <Navigate to="/overview" replace />
+              } />
+              <Route path="*" element={<Navigate to="/overview" replace />} />
+            </Routes>
+          )}
         </main>
       </div>
     </div>

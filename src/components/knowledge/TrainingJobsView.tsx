@@ -196,7 +196,7 @@ export const TrainingJobsView: React.FC<TrainingJobsViewProps> = ({
                         <span>Retry</span>
                       </button>
                     )}
-                    {job.status === 'running' && (
+                    {job.status === 'queued' && (
                       <button
                         type="button"
                         onClick={() => onCancelJob(job.id)}

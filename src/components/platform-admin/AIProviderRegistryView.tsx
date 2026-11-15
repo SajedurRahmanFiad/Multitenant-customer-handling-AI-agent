@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUrlQueryState } from '../../hooks/useUrlQueryState';
 import {
   Cpu,
   ShieldCheck,
@@ -8,9 +9,11 @@ import {
   CheckCircle2,
   Lock,
   Plus,
-  RefreshCw,
   Search,
   PowerOff,
+  Edit2,
+  Trash2,
+  X,
   Sparkles,
   ExternalLink
 } from 'lucide-react';
@@ -18,6 +21,8 @@ import { AIProviderModel } from '../../types/platformAdmin';
 
 interface AIProviderRegistryViewProps {
   models: AIProviderModel[];
+  onSaveModel: (model: AIProviderModel) => void;
+  onDeleteModel: (modelId: string) => void;
   onToggleStatus: (modelId: string) => void;
   onSetDefault: (modelId: string) => void;
   onSetFallback: (modelId: string) => void;
@@ -25,33 +30,54 @@ interface AIProviderRegistryViewProps {
 
 export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
   models,
+  onSaveModel,
+  onDeleteModel,
   onToggleStatus,
   onSetDefault,
   onSetFallback,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlQueryState<string>('q', '', undefined, true);
   const [providerFilter, setProviderFilter] = useState<string>('all');
-  const [pingStatus, setPingStatus] = useState<Record<string, 'idle' | 'pinging' | 'ok'>>({});
   const [showAddModal, setShowAddModal] = useState(false);
+  const [editingModel, setEditingModel] = useState<AIProviderModel | null>(null);
+  const [deletingModel, setDeletingModel] = useState<AIProviderModel | null>(null);
+  const [modelDraft, setModelDraft] = useState<AIProviderModel>(() => createEmptyModel());
+
+  const modelProviders: AIProviderModel['provider'][] = [
+    'Google Gemini', 'OpenAI', 'Anthropic', 'Groq / Llama', 'Ollama Dedicated',
+  ];
+  const modelCapabilities: AIProviderModel['capabilities'] = [
+    'text', 'vision', 'tools', 'json', 'embeddings', 'voice',
+  ];
+
+  const openAddModal = () => {
+    setEditingModel(null);
+    setModelDraft(createEmptyModel());
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (model: AIProviderModel) => {
+    setEditingModel(model);
+    setModelDraft({ ...model, capabilities: [...model.capabilities] });
+    setShowAddModal(true);
+  };
+
+  const handleSaveModel = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    onSaveModel(modelDraft);
+    setShowAddModal(false);
+    setEditingModel(null);
+  };
 
   const filteredModels = models.filter((m) => {
     const matchesSearch =
       m.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
       m.modelId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      m.secretReference.toLowerCase().includes(searchQuery.toLowerCase());
+      m.apiKey.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesProvider = providerFilter === 'all' || m.provider === providerFilter;
     return matchesSearch && matchesProvider;
   });
 
-  const handlePing = (id: string) => {
-    setPingStatus((prev) => ({ ...prev, [id]: 'pinging' }));
-    setTimeout(() => {
-      setPingStatus((prev) => ({ ...prev, [id]: 'ok' }));
-      setTimeout(() => {
-        setPingStatus((prev) => ({ ...prev, [id]: 'idle' }));
-      }, 3000);
-    }, 800);
-  };
 
   return (
     <div className="space-y-6">
@@ -64,21 +90,21 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-base font-bold text-slate-900">
-                Zero-Plaintext Secret Architecture
+                Super Admin API Key Registry
               </h3>
               <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200">
-                KMS Secured
+                Super Admin Only
               </span>
             </div>
             <p className="text-xs text-slate-600 mt-1 max-w-2xl leading-relaxed">
-              Provider API keys are resolved at runtime via encrypted HashiCorp Vault / Google Cloud KMS secret references. Keys are never transmitted to client browsers, logged in tracing spans, or stored in tenant configs.
+              API keys are displayed in clear text while this registry is open. This demo keeps edits in browser memory and does not persist them to a backend.
             </p>
           </div>
         </div>
 
         <button
           type="button"
-          onClick={() => setShowAddModal(true)}
+          onClick={openAddModal}
           className="flex items-center gap-2 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold transition-colors shadow-xs shrink-0"
         >
           <Plus className="w-4 h-4" />
@@ -92,7 +118,7 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder="Search by model ID, name, or secret reference..."
+            placeholder="Search by model ID, name, or API key..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-300"
@@ -120,9 +146,6 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
       {/* Model Grid (Light Mode) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {filteredModels.map((model) => {
-          const isPinging = pingStatus[model.id] === 'pinging';
-          const isPingOk = pingStatus[model.id] === 'ok';
-
           return (
             <div
               key={model.id}
@@ -207,18 +230,15 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
                   </div>
                 </div>
 
-                {/* Secret Reference Box (Light Mode) */}
-                <div className="mt-4 p-2.5 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between text-xs">
-                  <div className="flex items-center gap-2 min-w-0">
+                {/* API key displayed for super-admins */}
+                <div className="mt-4 p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs">
+                  <div className="flex items-start gap-2 min-w-0">
                     <Lock className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                    <span className="text-[11px] text-slate-500 shrink-0">Secret URI:</span>
-                    <span className="font-mono text-slate-700 truncate text-[11px]">
-                      {model.secretReference}
+                    <span className="text-[11px] text-slate-500 shrink-0">API Key:</span>
+                    <span className="font-mono text-slate-700 break-all text-[11px]">
+                      {model.apiKey || 'Not configured'}
                     </span>
                   </div>
-                  <span className="text-[10px] text-emerald-700 font-semibold shrink-0 ml-2">
-                    Secured
-                  </span>
                 </div>
 
                 {/* Capabilities pills */}
@@ -252,42 +272,40 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
                   </div>
                   <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="text-[10px] text-slate-500 block">P95 Latency</span>
-                    <span className="text-xs font-bold text-slate-900">
-                      {model.latencyP95Ms}ms
-                    </span>
+                    <span className="text-xs font-bold text-slate-500">Not measured</span>
                   </div>
                   <div className="p-2 rounded-xl bg-slate-50 border border-slate-100">
                     <span className="text-[10px] text-slate-500 block">24h Errors</span>
-                    <span
-                      className={`text-xs font-bold ${
-                        model.errorRate24hPercent > 0.05
-                          ? 'text-amber-600'
-                          : 'text-emerald-600'
-                      }`}
-                    >
-                      {model.errorRate24hPercent}%
-                    </span>
+                    <span className="text-xs font-bold text-slate-500">Not measured</span>
                   </div>
                 </div>
               </div>
 
               {/* Bottom Quick Controls */}
               <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
-                <button
-                  type="button"
-                  onClick={() => handlePing(model.id)}
-                  disabled={isPinging}
-                  className="flex items-center gap-1.5 px-2.5 py-1 text-xs text-slate-600 hover:text-slate-900 rounded-lg hover:bg-slate-100 transition-colors font-medium"
-                >
-                  <RefreshCw
-                    className={`w-3.5 h-3.5 ${isPinging ? 'animate-spin text-indigo-600' : ''}`}
-                  />
-                  <span>
-                    {isPinging ? 'Pinging...' : isPingOk ? 'Latency 180ms (OK)' : 'Live Health Ping'}
-                  </span>
-                </button>
+                <span className="px-2.5 py-1 text-xs text-slate-500">Provider health checks are not configured</span>
 
                 <div className="flex items-center gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => openEditModal(model)}
+                    title={`Edit ${model.displayName}`}
+                    aria-label={`Edit ${model.displayName}`}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-slate-700 hover:bg-slate-100 rounded-lg font-semibold transition-colors"
+                  >
+                    <Edit2 className="w-3.5 h-3.5" />
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeletingModel(model)}
+                    title={`Delete ${model.displayName}`}
+                    aria-label={`Delete ${model.displayName}`}
+                    className="inline-flex items-center gap-1 px-2 py-1 text-[11px] text-rose-700 hover:bg-rose-50 rounded-lg font-semibold transition-colors"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Delete
+                  </button>
                   {!model.isDefault && (
                     <button
                       type="button"
@@ -313,35 +331,39 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
         })}
       </div>
 
-      {/* Add Model Modal (Light Mode) */}
+      {/* Register and edit model modal */}
       {showAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in">
-          <div className="bg-white border border-slate-200 rounded-2xl w-full max-w-lg shadow-xl p-6 space-y-4">
+          <form onSubmit={handleSaveModel} className="bg-white border border-slate-200 rounded-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-xl p-6 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-2">
                 <div className="p-2 bg-indigo-50 text-indigo-600 rounded-xl">
                   <Cpu className="w-5 h-5" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900">
-                  Register New AI Model
+                  {editingModel ? 'Edit AI Model' : 'Register New AI Model'}
                 </h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowAddModal(false)}
-                className="text-slate-400 hover:text-slate-600 text-sm font-semibold p-1"
+                aria-label="Close model form"
+                className="text-slate-400 hover:text-slate-600 p-1"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+              <div className="sm:col-span-2">
                 <label className="block text-slate-700 font-bold mb-1">
-                  Model Display Name
+                  Model Display Name *
                 </label>
                 <input
                   type="text"
+                  required
+                  value={modelDraft.displayName}
+                  onChange={(event) => setModelDraft((previous) => ({ ...previous, displayName: event.target.value }))}
                   placeholder="e.g. Gemini 2.5 Pro Ultra"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
@@ -349,26 +371,60 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
 
               <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  Model Identifier (API Parameter)
+                  Model Identifier (API Parameter) *
                 </label>
                 <input
                   type="text"
+                  required
+                  value={modelDraft.modelId}
+                  onChange={(event) => setModelDraft((previous) => ({ ...previous, modelId: event.target.value }))}
                   placeholder="e.g. gemini-2.5-pro"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
               </div>
 
               <div>
+                <label className="block text-slate-700 font-bold mb-1">Provider *</label>
+                <select
+                  required
+                  value={modelDraft.provider}
+                  onChange={(event) => setModelDraft((previous) => ({ ...previous, provider: event.target.value as AIProviderModel['provider'] }))}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900"
+                >
+                  {modelProviders.map((provider) => <option key={provider} value={provider}>{provider}</option>)}
+                </select>
+              </div>
+
+              <div>
                 <label className="block text-slate-700 font-bold mb-1">
-                  KMS / Vault Secret Reference
+                  Endpoint URL *
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={modelDraft.endpointUrl}
+                  onChange={(event) => setModelDraft((previous) => ({ ...previous, endpointUrl: event.target.value }))}
+                  placeholder="https://api.provider.com/v1"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
+                />
+              </div>
+
+              <div>
+                <label className="block text-slate-700 font-bold mb-1">
+                  API Key
                 </label>
                 <input
                   type="text"
-                  placeholder="vault://gcp-kms/gemini-prod-v3"
+                  required
+                  autoComplete="off"
+                  spellCheck={false}
+                  value={modelDraft.apiKey}
+                  onChange={(event) => setModelDraft((previous) => ({ ...previous, apiKey: event.target.value }))}
+                  placeholder="Paste provider API key"
                   className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-mono text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
                 />
                 <span className="text-[10px] text-slate-500 mt-1 block">
-                  Never enter raw API keys. Reference a secured KMS or HashiCorp Vault path.
+                  The key is shown in clear text to super admins.
                 </span>
               </div>
 
@@ -379,8 +435,11 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
                   </label>
                   <input
                     type="number"
-                    step="0.01"
-                    placeholder="0.10"
+                    min="0"
+                    step="any"
+                    required
+                    value={modelDraft.costPerMillionInputUSD}
+                    onChange={(event) => setModelDraft((previous) => ({ ...previous, costPerMillionInputUSD: Number(event.target.value) }))}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
@@ -390,28 +449,124 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
                   </label>
                   <input
                     type="number"
-                    step="0.01"
-                    placeholder="0.40"
+                    min="0"
+                    step="any"
+                    required
+                    value={modelDraft.costPerMillionOutputUSD}
+                    onChange={(event) => setModelDraft((previous) => ({ ...previous, costPerMillionOutputUSD: Number(event.target.value) }))}
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-300"
                   />
                 </div>
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <label className="block text-slate-700 font-bold">
+                  Context Window Tokens *
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    value={modelDraft.contextWindowTokens}
+                    onChange={(event) => setModelDraft((previous) => ({ ...previous, contextWindowTokens: Number(event.target.value) }))}
+                    className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900"
+                  />
+                </label>
+                <label className="block text-slate-700 font-bold">
+                  Max Output Tokens *
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    required
+                    value={modelDraft.maxOutputTokens}
+                    onChange={(event) => setModelDraft((previous) => ({ ...previous, maxOutputTokens: Number(event.target.value) }))}
+                    className="mt-1 w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900"
+                  />
+                </label>
+              </div>
+
+              <fieldset className="sm:col-span-2">
+                <legend className="block text-slate-700 font-bold mb-2">Capabilities</legend>
+                <div className="flex flex-wrap gap-x-4 gap-y-2">
+                  {modelCapabilities.map((capability) => (
+                    <label key={capability} className="inline-flex items-center gap-1.5 text-slate-700">
+                      <input
+                        type="checkbox"
+                        checked={modelDraft.capabilities.includes(capability)}
+                        onChange={(event) => setModelDraft((previous) => ({
+                          ...previous,
+                          capabilities: event.target.checked
+                            ? [...previous.capabilities, capability]
+                            : previous.capabilities.filter((item) => item !== capability),
+                        }))}
+                      />
+                      {capability}
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
             </div>
 
             <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
+                onClick={() => { setShowAddModal(false); setEditingModel(null); }}
+                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors shadow-xs"
+              >
+                {editingModel ? 'Save Changes' : 'Register Model'}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {deletingModel && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-in fade-in">
+          <div
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="delete-model-title"
+            aria-describedby="delete-model-description"
+            className="bg-white border border-slate-200 rounded-2xl w-full max-w-md shadow-xl p-6 space-y-4"
+          >
+            <div className="flex items-start gap-3">
+              <div className="p-2 bg-rose-50 text-rose-600 rounded-xl shrink-0">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <div>
+                <h3 id="delete-model-title" className="text-base font-bold text-slate-900">
+                  Delete {deletingModel.displayName}?
+                </h3>
+                <p id="delete-model-description" className="mt-1 text-xs leading-relaxed text-slate-600">
+                  This permanently removes the registered model. The current default model must be changed before it can be deleted.
+                </p>
+              </div>
+            </div>
+            <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeletingModel(null)}
                 className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition-colors"
               >
                 Cancel
               </button>
               <button
                 type="button"
-                onClick={() => setShowAddModal(false)}
-                className="px-4 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 rounded-xl transition-colors shadow-xs"
+                onClick={() => {
+                  onDeleteModel(deletingModel.id);
+                  setDeletingModel(null);
+                }}
+                className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-bold text-white bg-rose-600 hover:bg-rose-700 rounded-xl transition-colors"
               >
-                Register & Validate KMS
+                <Trash2 className="w-3.5 h-3.5" />
+                Delete Model
               </button>
             </div>
           </div>
@@ -420,3 +575,24 @@ export const AIProviderRegistryView: React.FC<AIProviderRegistryViewProps> = ({
     </div>
   );
 };
+
+function createEmptyModel(): AIProviderModel {
+  return {
+    id: `mdl_${Date.now().toString(36)}`,
+    modelId: '',
+    displayName: '',
+    provider: 'Google Gemini',
+    apiKey: '',
+    endpointUrl: '',
+    capabilities: ['text'],
+    costPerMillionInputUSD: 0,
+    costPerMillionOutputUSD: 0,
+    contextWindowTokens: 1,
+    maxOutputTokens: 1,
+    latencyP95Ms: 0,
+    errorRate24hPercent: 0,
+    status: 'active',
+    isDefault: false,
+    isFallback: false,
+  };
+}

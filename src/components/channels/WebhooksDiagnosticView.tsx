@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUrlQueryState } from '../../hooks/useUrlQueryState';
 import { WebhookDiagnosticEvent } from '../../types/channels';
 import {
   Activity,
@@ -30,16 +31,16 @@ export const WebhooksDiagnosticView: React.FC<WebhooksDiagnosticViewProps> = ({
   onShowToast,
 }) => {
   const [selectedEvent, setSelectedEvent] = useState<WebhookDiagnosticEvent | null>(null);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlQueryState<string>('q', '', undefined, true);
   const [channelFilter, setChannelFilter] = useState<'all' | 'messenger' | 'whatsapp' | 'woocommerce' | 'steadfast'>('all');
   const [statusFilter, setStatusFilter] = useState<'all' | 'processed' | 'duplicate_ignored' | 'failed'>('all');
   const [isCopied, setIsCopied] = useState(false);
 
   // Derived metrics
-  const totalReceived = 3412 + events.length;
-  const totalProcessed = 3389 + events.filter((e) => e.status === 'processed').length;
-  const duplicateIgnored = 18 + events.filter((e) => e.status === 'duplicate_ignored').length;
-  const totalFailed = 5 + events.filter((e) => e.status === 'failed').length;
+  const totalReceived = events.length;
+  const totalProcessed = events.filter((e) => e.status === 'processed').length;
+  const duplicateIgnored = events.filter((e) => e.status === 'duplicate_ignored').length;
+  const totalFailed = events.filter((e) => e.status === 'failed').length;
 
   const filteredEvents = events.filter((evt) => {
     if (channelFilter !== 'all' && evt.channel !== channelFilter) return false;
@@ -245,7 +246,7 @@ export const WebhooksDiagnosticView: React.FC<WebhooksDiagnosticViewProps> = ({
               className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white transition flex items-center gap-1.5 shadow-xs"
             >
               <Radio className="w-3 h-3 text-emerald-400 animate-pulse" />
-              <span>Simulate Inbound</span>
+              <span>Refresh Events</span>
             </button>
           </div>
         </div>

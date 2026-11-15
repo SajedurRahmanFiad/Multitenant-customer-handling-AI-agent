@@ -1,18 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { MessengerConnection } from '../../types/channels';
 import {
   CheckCircle2,
-  AlertTriangle,
-  RefreshCw,
-  ExternalLink,
   ShieldCheck,
   KeyRound,
   Radio,
   Clock,
   Layers,
   Send,
-  SlidersHorizontal,
-  ChevronRight,
   Info,
   Lock,
 } from 'lucide-react';
@@ -28,41 +23,6 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
   onUpdateConnection,
   onShowToast,
 }) => {
-  const [isReconnectModalOpen, setIsReconnectModalOpen] = useState(false);
-  const [isTestPingLoading, setIsTestPingLoading] = useState(false);
-  const [tokenInput, setTokenInput] = useState('');
-  const [permissionCheckPassed, setPermissionCheckPassed] = useState(true);
-
-  const handleTestPing = () => {
-    setIsTestPingLoading(true);
-    setTimeout(() => {
-      setIsTestPingLoading(false);
-      onShowToast('Messenger Webhook ping received successfully in 38ms');
-      onUpdateConnection({
-        ...connection,
-        lastWebhookAt: 'Just now',
-        lastReplyAt: 'Just now',
-      });
-    }, 900);
-  };
-
-  const handleReconnectSave = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsReconnectModalOpen(false);
-    setTokenInput('');
-    onShowToast('Facebook Page token successfully rotated and verified via Meta Graph API v21.0');
-    onUpdateConnection({
-      ...connection,
-      tokenHealth: {
-        ...connection.tokenHealth,
-        status: 'healthy',
-        daysRemaining: 60,
-        lastRefreshed: 'Just now (Admin rotated)',
-      },
-      status: 'connected',
-    });
-  };
-
   const handleToggleDisconnect = () => {
     const nextStatus = connection.status === 'connected' ? 'disconnected' : 'connected';
     onUpdateConnection({
@@ -90,7 +50,7 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
                   </svg>
                 </div>
               </div>
-              <span className="absolute -bottom-1 -right-1 w-4 h-4 rounded-full bg-emerald-500 border-2 border-white" />
+              <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 border-white ${connection.status === 'connected' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
             </div>
 
             <div>
@@ -98,9 +58,9 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
                 <h3 className="text-lg font-bold text-slate-900 tracking-tight">
                   {connection.pageName}
                 </h3>
-                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200/70">
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                  {connection.status === 'connected' ? 'Active & Webhook Listening' : 'Disconnected'}
+                <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${connection.status === 'connected' ? 'bg-emerald-50 text-emerald-700 border-emerald-200/70' : 'bg-slate-50 text-slate-600 border-slate-200'}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${connection.status === 'connected' ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                  {connection.status === 'connected' ? 'Connected' : 'Disconnected'}
                 </span>
                 {connection.instagramLinked && (
                   <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-purple-50 text-purple-700 border border-purple-200/60">
@@ -113,7 +73,7 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
                 <span>•</span>
                 <span>{connection.category}</span>
                 <span>•</span>
-                <span className="text-slate-400">Meta Graph API v21.0</span>
+                <span className="text-slate-400">Meta Graph API version set by platform</span>
               </div>
             </div>
           </div>
@@ -121,33 +81,24 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
-              onClick={handleTestPing}
-              disabled={isTestPingLoading}
+              disabled
               className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Radio className={`w-3.5 h-3.5 text-blue-600 ${isTestPingLoading ? 'animate-ping' : ''}`} />
-              <span>{isTestPingLoading ? 'Pinging...' : 'Test Webhook Ping'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsReconnectModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5 shadow-2xs"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Rotate / Reconnect</span>
+              <Radio className="w-3.5 h-3.5 text-blue-600" />
+              <span>Webhook ping is not configured</span>
             </button>
 
             <button
               type="button"
               onClick={handleToggleDisconnect}
+              disabled={connection.status !== 'connected'}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                 connection.status === 'connected'
                   ? 'bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100'
                   : 'bg-emerald-600 text-white hover:bg-emerald-700'
               }`}
             >
-              {connection.status === 'connected' ? 'Disconnect Page' : 'Connect Page'}
+              {connection.status === 'connected' ? 'Disconnect Page' : 'Connect with Facebook above'}
             </button>
           </div>
         </div>
@@ -160,9 +111,9 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
             </span>
             <div className="flex items-center gap-1.5">
               <Clock className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm font-bold text-slate-900">{connection.lastWebhookAt}</span>
+              <span className="text-sm font-bold text-slate-900">{connection.lastWebhookAt || 'Not recorded'}</span>
             </div>
-            <p className="text-[11px] text-slate-500">Live webhook listener active</p>
+            <p className="text-[11px] text-slate-500">Webhook activity is not recorded here.</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1">
@@ -171,9 +122,9 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
             </span>
             <div className="flex items-center gap-1.5">
               <Send className="w-4 h-4 text-blue-500" />
-              <span className="text-sm font-bold text-slate-900">{connection.lastReplyAt}</span>
+              <span className="text-sm font-bold text-slate-900">{connection.lastReplyAt || 'Not recorded'}</span>
             </div>
-            <p className="text-[11px] text-slate-500">200 OK delivery receipt</p>
+            <p className="text-[11px] text-slate-500">Message delivery tracking is not configured.</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1">
@@ -183,10 +134,10 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
             <div className="flex items-center gap-1.5">
               <KeyRound className="w-4 h-4 text-indigo-500" />
               <span className="text-sm font-bold text-slate-900">
-                {connection.tokenHealth.daysRemaining} Days Left
+                {connection.tokenHealth.daysRemaining > 0 ? `${connection.tokenHealth.daysRemaining} Days Left` : 'Expiry unknown'}
               </span>
             </div>
-            <p className="text-[11px] text-slate-500">Auto-refresh mechanism safe</p>
+            <p className="text-[11px] text-slate-500">Page token expiry is not currently reported.</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1">
@@ -195,9 +146,9 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
             </span>
             <div className="flex items-center gap-1.5">
               <ShieldCheck className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm font-bold text-emerald-700">100% Granted</span>
+              <span className="text-sm font-bold text-slate-800">{connection.grantedPermissions.length} granted</span>
             </div>
-            <p className="text-[11px] text-slate-500">0 missing Meta scopes</p>
+            <p className="text-[11px] text-slate-500">Required scope coverage is not evaluated here.</p>
           </div>
         </div>
       </div>
@@ -246,7 +197,7 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
             </div>
             <div className="flex justify-between py-1.5 border-b border-slate-100">
               <span className="text-slate-500">Estimated Expiry:</span>
-              <span className="font-medium text-emerald-700">{connection.tokenHealth.expiresAt}</span>
+              <span className="font-medium text-slate-600">{connection.tokenHealth.expiresAt || 'Unknown'}</span>
             </div>
           </div>
 
@@ -279,7 +230,7 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
               </h4>
             </div>
             <span className="text-[11px] font-medium text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-              Live Verified
+              Subscription status unavailable
             </span>
           </div>
 
@@ -333,63 +284,6 @@ export const MessengerConnectionView: React.FC<MessengerConnectionViewProps> = (
         </div>
       </div>
 
-      {/* Reconnect / Rotate Modal */}
-      {isReconnectModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">
-                Reconnect Facebook Page
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Authorized administrators can replace or renew the Meta Page Access Token without exposing secrets.
-              </p>
-            </div>
-
-            <form onSubmit={handleReconnectSave} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  New Meta Page Access Token
-                </label>
-                <input
-                  type="password"
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  placeholder="Paste EAAG... access token (will be securely vaulted)"
-                  required
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 font-mono"
-                />
-                <p className="text-[11px] text-slate-400">
-                  Must have `pages_messaging` and `pages_manage_metadata` permissions.
-                </p>
-              </div>
-
-              <div className="p-3 bg-slate-50 rounded-xl border border-slate-200 text-xs text-slate-600 space-y-1">
-                <span className="font-semibold text-slate-800 block">Automatic Verification</span>
-                <p className="text-[11px]">
-                  Upon saving, our server immediately runs a handshake against Meta Graph API v21.0 to ensure your webhook URL and subscriptions remain uninterrupted.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsReconnectModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white transition shadow-xs"
-                >
-                  Verify & Save Token
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

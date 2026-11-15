@@ -4,7 +4,6 @@ export type PageId =
   | 'knowledge'
   | 'agent'
   | 'channels'
-  | 'analytics'
   | 'team'
   | 'settings'
   | 'platform_admin';
@@ -47,12 +46,6 @@ export const NAV_ITEMS: NavItem[] = [
     label: 'Channels & Integrations',
     subtitle: 'Messenger, WhatsApp & systems',
     description: 'Messenger, WhatsApp and business systems',
-  },
-  {
-    id: 'analytics',
-    label: 'Analytics & Usage',
-    subtitle: 'Resolution, costs & volume',
-    description: 'Resolution, costs, volume and quality',
   },
   {
     id: 'team',

@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   AgentConfigTab,
   AgentIdentityConfig,
   SystemInstructionsConfig,
   ConversationBehaviorConfig,
-  HandoverRule,
-  ResponseRulesConfig,
   AgentModeType,
   AgentConfigVersion,
   PipelineLayerConfig,
+  HandoverRule,
+  ResponseRulesConfig,
 } from '../types/agentConfig';
 import {
   INITIAL_IDENTITY,
@@ -24,33 +24,40 @@ import { IdentityPersonalityView } from '../components/agent-config/IdentityPers
 import { MultiLayerPipelineView } from '../components/agent-config/MultiLayerPipelineView';
 import { SystemInstructionsView } from '../components/agent-config/SystemInstructionsView';
 import { ConversationBehaviorView } from '../components/agent-config/ConversationBehaviorView';
-import { HumanHandoverRulesView } from '../components/agent-config/HumanHandoverRulesView';
-import { ResponseRulesView } from '../components/agent-config/ResponseRulesView';
 import { AgentModesView } from '../components/agent-config/AgentModesView';
-import { ConfigVersionHistoryView } from '../components/agent-config/ConfigVersionHistoryView';
 import { ToolsActionsView } from '../components/agent-config/ToolsActionsView';
 import { AgentTool, ToolExecutionAuditLog } from '../types/tools';
 import { INITIAL_AGENT_TOOLS, INITIAL_TOOL_AUDIT_LOGS } from '../data/toolsMockData';
+import { api } from '../lib/api';
 import {
   User,
   Layers,
   FileCode,
   SlidersHorizontal,
   Wrench,
-  ArrowRightLeft,
-  FileCheck2,
   Zap,
-  History,
   CheckCircle2,
   Save,
   Send,
-  X,
-  ShieldCheck,
 } from 'lucide-react';
 import { SubPageNav } from '../components/navigation/SubPageNav';
+import { useUrlQueryState } from '../hooks/useUrlQueryState';
+
+interface AgentConfigApiResponse {
+  mode: AgentModeType;
+  identity: AgentIdentityConfig;
+  instructions: SystemInstructionsConfig;
+  behavior: ConversationBehaviorConfig;
+  responseRules: ResponseRulesConfig;
+  handoverRules: HandoverRule[];
+  pipeline: { layers: PipelineLayerConfig[] };
+  versions: Array<AgentConfigVersion & { handoverRules?: HandoverRule[] }>;
+}
 
 export const AgentConfigPage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<AgentConfigTab>('identity');
+  const [activeTab, setActiveTab] = useUrlQueryState<AgentConfigTab>('tab', 'identity', [
+    'identity', 'pipeline', 'instructions', 'behavior', 'tools', 'modes',
+  ]);
 
   // Working Configuration State
   const [identity, setIdentity] = useState<AgentIdentityConfig>(INITIAL_IDENTITY);
@@ -63,107 +70,151 @@ export const AgentConfigPage: React.FC = () => {
   const [versions, setVersions] = useState<AgentConfigVersion[]>(INITIAL_CONFIG_VERSIONS);
   const [agentTools, setAgentTools] = useState<AgentTool[]>(INITIAL_AGENT_TOOLS);
   const [toolAuditLogs, setToolAuditLogs] = useState<ToolExecutionAuditLog[]>(INITIAL_TOOL_AUDIT_LOGS);
+  const [isLoadingConfig, setIsLoadingConfig] = useState(true);
+  const [configLoadError, setConfigLoadError] = useState<string | null>(null);
+  const [configReloadKey, setConfigReloadKey] = useState(0);
+  const [isSaving, setIsSaving] = useState(false);
 
-  // Modals & Toast State
-  const [isPublishModalOpen, setIsPublishModalOpen] = useState(false);
-  const [publishSummary, setPublishSummary] = useState('');
+  // Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    setIsLoadingConfig(true);
+
+    Promise.all([
+      api.get<AgentConfigApiResponse>('/agent/config'),
+      api.get<{ tools: AgentTool[] }>('/tools'),
+      api.get<{ logs: ToolExecutionAuditLog[] }>('/tools/audit-logs'),
+    ])
+      .then(([config, tools, audit]) => {
+        if (cancelled) return;
+        setIdentity(config.identity);
+        setInstructions(config.instructions);
+        setBehavior(config.behavior);
+        setMode(config.mode);
+        setResponseRules(config.responseRules);
+        setHandoverRules(config.handoverRules);
+        setPipelineLayers(config.pipeline.layers.map((layer) => ({
+          ...layer,
+          selectedProvider: layer.selectedProvider || INITIAL_PROVIDER_MODELS.find((model) => model.modelId === layer.selectedModelId)?.provider || '',
+        })));
+        setVersions(config.versions.map((version) => ({
+          ...version,
+          handoverRules: version.handoverRules ?? config.handoverRules,
+        })));
+        setAgentTools(tools.tools);
+        setToolAuditLogs(audit.logs);
+        setConfigLoadError(null);
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setConfigLoadError(error instanceof Error ? error.message : 'Could not load agent configuration');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoadingConfig(false);
+      });
+
+    return () => { cancelled = true; };
+  }, [configReloadKey]);
 
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleUpdateTool = (updated: AgentTool) => {
-    setAgentTools((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  const handleUpdateTool = async (updated: AgentTool) => {
+    try {
+      const result = await api.patch<{ tool: Partial<AgentTool> }>(`/tools/${updated.id}`, {
+        isEnabled: updated.isEnabled,
+        approvalRequirement: updated.approvalRequirement,
+        timeoutMs: updated.timeoutMs,
+        rateLimit: updated.rateLimit,
+        retryPolicy: updated.retryPolicy,
+        description: updated.description,
+      });
+      setAgentTools((prev) => prev.map((tool) => (
+        tool.id === updated.id ? { ...tool, ...result.tool } : tool
+      )));
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not save tool settings');
+    }
   };
 
   const handleUpdateLayer = (updated: PipelineLayerConfig) => {
     setPipelineLayers((prev) => prev.map((l) => (l.id === updated.id ? updated : l)));
   };
 
-  // 1. Handover Rules CRUD
-  const handleAddHandoverRule = (newRule: Omit<HandoverRule, 'id'>) => {
-    const rule: HandoverRule = {
-      ...newRule,
-      id: `rule_${Date.now()}`,
-    };
-    setHandoverRules((prev) => [rule, ...prev]);
-    showToast(`Handover trigger "${rule.name}" created`);
-  };
-
-  const handleUpdateHandoverRule = (updatedRule: HandoverRule) => {
-    setHandoverRules((prev) =>
-      prev.map((r) => (r.id === updatedRule.id ? updatedRule : r))
-    );
-    showToast(`Handover rule "${updatedRule.name}" updated`);
-  };
-
-  const handleDeleteHandoverRule = (id: string) => {
-    const rule = handoverRules.find((r) => r.id === id);
-    setHandoverRules((prev) => prev.filter((r) => r.id !== id));
-    showToast(`Handover rule "${rule?.name || 'Item'}" removed`);
-  };
-
-  // 2. Mode Change
+  // 1. Mode Change
   const handleChangeMode = (newMode: AgentModeType) => {
     setMode(newMode);
     showToast(`Operational mode switched to ${newMode.replace('_', ' ').toUpperCase()}`);
   };
 
-  // 3. Save Draft
-  const handleSaveDraft = () => {
-    showToast('Agent configuration draft saved to local workspace');
+  const persistDraft = async () => {
+    await api.put('/agent/identity', identity);
+    await api.put('/agent/instructions', instructions);
+    await api.put('/agent/behavior', behavior);
+    await api.put('/agent/mode', { mode });
+    await Promise.all(pipelineLayers.map((layer) => api.patch(`/agent/pipeline/${layer.id}`, {
+      title: layer.title,
+      description: layer.description,
+      selectedModelId: layer.selectedModelId,
+      fallbackModelId: layer.fallbackModelId,
+      temperature: layer.temperature,
+      maxTokens: layer.maxTokens,
+      systemPrompt: layer.systemPrompt,
+      isEnabled: layer.isEnabled,
+    })));
   };
 
-  // 4. Publish Version
-  const handleConfirmPublish = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!publishSummary.trim()) return;
-
-    const nextVer = `v2.4.${versions.length + 1}`;
-    const newVersion: AgentConfigVersion = {
-      version: nextVer,
-      publishedAt: 'Just now',
-      publishedBy: 'Sajedur Rahman',
-      summary: publishSummary.trim(),
-      mode,
-      identity,
-      instructions,
-      behavior,
-      handoverRules,
-      responseRules,
-      isLive: true,
-    };
-
-    setVersions((prev) => [
-      newVersion,
-      ...prev.map((v) => ({ ...v, isLive: false })),
-    ]);
-
-    setPublishSummary('');
-    setIsPublishModalOpen(false);
-    showToast(`Configuration ${nextVer} published live across Messenger & WhatsApp!`);
+  // 2. Save Draft
+  const handleSaveDraft = async () => {
+    setIsSaving(true);
+    try {
+      await persistDraft();
+      showToast('Agent configuration draft saved');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not save agent configuration');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  // 5. Restore Version
-  const handleRollbackVersion = (ver: AgentConfigVersion) => {
-    setIdentity(ver.identity);
-    setInstructions(ver.instructions);
-    setBehavior(ver.behavior);
-    setHandoverRules(ver.handoverRules);
-    setResponseRules(ver.responseRules);
-    setMode(ver.mode);
+  // 3. Publish Version
+  const handlePublish = async () => {
+    setIsSaving(true);
+    try {
+      await persistDraft();
+      await api.post('/agent/publish', { summary: 'Published changes' });
+      setConfigReloadKey((key) => key + 1);
+      showToast('Agent configuration published successfully');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Could not publish agent configuration');
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
-    setVersions((prev) =>
-      prev.map((v) => ({
-        ...v,
-        isLive: v.version === ver.version,
-      }))
+  if (isLoadingConfig) {
+    return <div className="p-6 text-sm text-slate-600">Loading agent configuration...</div>;
+  }
+
+  if (configLoadError) {
+    return (
+      <div className="p-6 space-y-3">
+        <p className="text-sm text-red-700">{configLoadError}</p>
+        <button
+          type="button"
+          onClick={() => setConfigReloadKey((key) => key + 1)}
+          className="px-3 py-2 rounded-lg text-xs font-semibold bg-slate-900 text-white"
+        >
+          Retry loading
+        </button>
+      </div>
     );
-
-    showToast(`Agent configuration restored to ${ver.version}`);
-  };
+  }
 
   const SUBPAGES = [
     {
@@ -200,31 +251,11 @@ export const AgentConfigPage: React.FC = () => {
       group: 'CONFIGURATION',
     },
     {
-      id: 'handover' as AgentConfigTab,
-      label: 'Human Handover',
-      icon: ArrowRightLeft,
-      count: handoverRules.filter((r) => r.isActive).length,
-      group: 'SAFETY & CONTROL',
-    },
-    {
-      id: 'response_rules' as AgentConfigTab,
-      label: 'Response Rules',
-      icon: FileCheck2,
-      group: 'SAFETY & CONTROL',
-    },
-    {
       id: 'modes' as AgentConfigTab,
       label: 'Agent Modes',
       icon: Zap,
       badge: mode === 'automatic' ? 'Auto' : mode === 'suggestion' ? 'Suggest' : 'Restricted',
       group: 'SAFETY & CONTROL',
-    },
-    {
-      id: 'history' as AgentConfigTab,
-      label: 'Version History',
-      icon: History,
-      count: versions.length,
-      group: 'VERSION CONTROL',
     },
   ];
 
@@ -249,7 +280,8 @@ export const AgentConfigPage: React.FC = () => {
             <div className="flex flex-col gap-2 pt-1">
               <button
                 type="button"
-                onClick={() => setIsPublishModalOpen(true)}
+                onClick={handlePublish}
+                disabled={isSaving}
                 className="w-full px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 hover:bg-slate-800 text-white flex items-center justify-center gap-1.5 transition-colors shadow-xs cursor-pointer"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -258,6 +290,7 @@ export const AgentConfigPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveDraft}
+                disabled={isSaving}
                 className="w-full px-3 py-2 rounded-xl text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Save className="w-3.5 h-3.5 text-slate-500" />
@@ -276,6 +309,7 @@ export const AgentConfigPage: React.FC = () => {
               <button
                 type="button"
                 onClick={handleSaveDraft}
+                disabled={isSaving}
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold border border-slate-200 text-slate-700 hover:bg-slate-50 flex items-center gap-1.5"
               >
                 <Save className="w-3.5 h-3.5 text-slate-500" />
@@ -283,7 +317,8 @@ export const AgentConfigPage: React.FC = () => {
               </button>
               <button
                 type="button"
-                onClick={() => setIsPublishModalOpen(true)}
+                onClick={handlePublish}
+                disabled={isSaving}
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white flex items-center gap-1.5 shadow-xs"
               >
                 <Send className="w-3.5 h-3.5" />
@@ -324,22 +359,6 @@ export const AgentConfigPage: React.FC = () => {
           />
         )}
 
-        {activeTab === 'handover' && (
-          <HumanHandoverRulesView
-            rules={handoverRules}
-            onAddRule={handleAddHandoverRule}
-            onUpdateRule={handleUpdateHandoverRule}
-            onDeleteRule={handleDeleteHandoverRule}
-          />
-        )}
-
-        {activeTab === 'response_rules' && (
-          <ResponseRulesView
-            config={responseRules}
-            onChange={setResponseRules}
-          />
-        )}
-
         {activeTab === 'modes' && (
           <AgentModesView
             currentMode={mode}
@@ -347,89 +366,9 @@ export const AgentConfigPage: React.FC = () => {
           />
         )}
 
-        {activeTab === 'history' && (
-          <ConfigVersionHistoryView
-            versions={versions}
-            onRollbackVersion={handleRollbackVersion}
-          />
-        )}
         </div>
       </div>
 
-      {/* Publish Configuration Modal */}
-      {isPublishModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs"
-            onClick={() => setIsPublishModalOpen(false)}
-          />
-          <div className="relative w-full max-w-lg bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 z-10 space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <Send className="w-4 h-4 text-emerald-600" />
-                Publish Configuration to Live Agent
-              </h3>
-              <button
-                type="button"
-                onClick={() => setIsPublishModalOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-700"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed">
-              This will create a new immutable configuration release and deploy the instructions, tone, handover thresholds, and operational mode immediately across your active Messenger and WhatsApp channels.
-            </p>
-
-            <form onSubmit={handleConfirmPublish} className="space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-700 mb-1">
-                  Change Summary / Release Notes *
-                </label>
-                <textarea
-                  required
-                  rows={3}
-                  value={publishSummary}
-                  onChange={(e) => setPublishSummary(e.target.value)}
-                  placeholder="e.g. Updated tone to Friendly, added 45-min follow-up rule, configured bKash payment handover trigger..."
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 text-slate-900 resize-none font-sans"
-                />
-              </div>
-
-              <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600 space-y-1">
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900">Target Mode:</span>
-                  <span className="capitalize font-bold text-slate-900">{mode.replace('_', ' ')}</span>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="font-semibold text-slate-900">Active Handover Rules:</span>
-                  <span className="font-mono text-slate-900">
-                    {handoverRules.filter((r) => r.isActive).length} active
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-end gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsPublishModalOpen(false)}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-xl flex items-center gap-1.5 shadow-xs"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                  Publish Live
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

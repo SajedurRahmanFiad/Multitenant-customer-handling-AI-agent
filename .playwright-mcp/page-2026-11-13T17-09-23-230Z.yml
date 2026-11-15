@@ -1,0 +1,250 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e6]: S
+      - generic [ref=f2e7]:
+        - generic [ref=f2e8]: Support API
+        - generic [ref=f2e9]: Platform Admin
+    - button "Open navigation" [ref=f2e618]
+  - main [ref=f2e13]:
+    - generic [ref=f2e621]:
+      - generic [ref=f2e624]:
+        - button "Tenants Directory 5" [ref=f2e625] [cursor=pointer]:
+          - generic [ref=f2e630]: Tenants Directory
+          - generic [ref=f2e631]: "5"
+        - button "Currency System & Rates 6 Currencies" [ref=f2e632] [cursor=pointer]:
+          - generic [ref=f2e638]: Currency System & Rates
+          - generic [ref=f2e639]: 6 Currencies
+        - button "Global Pipeline Layers 5 Layers" [ref=f2e640] [cursor=pointer]:
+          - generic [ref=f2e645]: Global Pipeline Layers
+          - generic [ref=f2e646]: 5 Layers
+        - button "AI Provider Registry KMS" [ref=f2e647] [cursor=pointer]:
+          - generic [ref=f2e651]: AI Provider Registry
+          - generic [ref=f2e652]: KMS
+        - button "Usage & Cost Control" [ref=f2e653] [cursor=pointer]
+        - button "Queues & BullMQ 3" [ref=f2e657] [cursor=pointer]:
+          - generic [ref=f2e662]: Queues & BullMQ
+          - generic [ref=f2e663]: "3"
+        - button "System Health & SLA 99.98%" [ref=f2e664] [cursor=pointer]:
+          - generic [ref=f2e667]: System Health & SLA
+          - generic [ref=f2e668]: 99.98%
+        - button "Security & Canaries" [ref=f2e669] [cursor=pointer]
+      - generic [ref=f2e675]:
+        - generic [ref=f2e676]:
+          - generic [ref=f2e677]:
+            - generic [ref=f2e678]: Total Tenants
+            - generic [ref=f2e684]: "5"
+            - generic [ref=f2e685]: 4 actively serving customers
+          - generic [ref=f2e686]:
+            - generic [ref=f2e687]: Total Conversations
+            - generic [ref=f2e691]: 110,620
+            - generic [ref=f2e692]: Autonomous chats this month
+          - generic [ref=f2e693]:
+            - generic [ref=f2e694]: Messages Processed
+            - generic [ref=f2e699]: 422,620
+            - generic [ref=f2e700]: Total inbound & outbound turns
+          - generic [ref=f2e701]:
+            - generic [ref=f2e702]: Total Connected Channels
+            - generic [ref=f2e708]: "24"
+            - generic [ref=f2e709]: Messenger & WhatsApp live endpoints
+        - generic [ref=f2e710]:
+          - textbox "Search by business name, ID, or owner email..." [ref=f2e716]
+          - generic [ref=f2e717]:
+            - combobox [ref=f2e718]:
+              - option "All Statuses" [selected]
+              - option "Active"
+              - option "Suspended"
+            - button "Onboard Tenant" [ref=f2e719]
+        - table [ref=f2e723]:
+          - rowgroup [ref=f2e724]:
+            - row [ref=f2e725]:
+              - columnheader "Business / Tenant" [ref=f2e726]
+              - columnheader "Owner Contact" [ref=f2e727]
+              - columnheader "Primary Model" [ref=f2e728]
+              - columnheader "Conversations" [ref=f2e729]
+              - columnheader "Messages Processed" [ref=f2e730]
+              - columnheader "Channels" [ref=f2e731]
+              - columnheader "Operating Currency & Spend" [ref=f2e732]
+              - columnheader "Status" [ref=f2e733]
+              - columnheader "Actions" [ref=f2e734]
+          - rowgroup [ref=f2e735]:
+            - row [ref=f2e736]:
+              - cell "Bengal Loom & Crafts ten_loom_01" [ref=f2e737]:
+                - generic [ref=f2e738]: Bengal Loom & Crafts
+                - generic [ref=f2e739]: ten_loom_01
+              - cell "Sajedur Rahman sajedur@bengalloom.com +880 1712-984210" [ref=f2e740]:
+                - generic [ref=f2e741]: Sajedur Rahman
+                - generic [ref=f2e742]: sajedur@bengalloom.com
+                - generic [ref=f2e743]: +880 1712-984210
+              - cell "gemini-2.5-flash" [ref=f2e744]
+              - cell "12,480 active threads" [ref=f2e749]:
+                - generic [ref=f2e750]: 12,480
+                - generic [ref=f2e751]: active threads
+              - cell "48,920" [ref=f2e752]
+              - cell [ref=f2e753]:
+                - generic [ref=f2e754]:
+                  - generic [ref=f2e755]: 1 FB
+                  - generic [ref=f2e757]: 2 WA
+              - cell "BDT (৳) ৳ 2,450 Bal · ৳ 0/msg" [ref=f2e759]:
+                - generic [ref=f2e760]:
+                  - combobox [ref=f2e761]:
+                    - option "BDT (৳)" [selected]
+                    - option "USD ($)"
+                    - option "EUR (€)"
+                    - option "GBP (£)"
+                    - option "AED (د.إ)"
+                    - option "INR (₹)"
+                  - generic [ref=f2e762]: ৳ 2,450
+                - generic [ref=f2e763]:
+                  - generic [ref=f2e764]: Bal
+                  - generic [ref=f2e765]: ·
+                  - generic [ref=f2e766]: ৳ 0/msg
+              - cell "Active" [ref=f2e767]
+              - cell [ref=f2e770]:
+                - generic [ref=f2e771]:
+                  - button "Support Session" [ref=f2e772]
+                  - button "Suspend" [ref=f2e775]
+            - row [ref=f2e776]:
+              - cell "Gadget Express BD ten_gadget_02" [ref=f2e777]:
+                - generic [ref=f2e778]: Gadget Express BD
+                - generic [ref=f2e779]: ten_gadget_02
+              - cell "Mushfiqur Rahman mushfiq@gadgetexpress.com.bd +880 1819-204918" [ref=f2e780]:
+                - generic [ref=f2e781]: Mushfiqur Rahman
+                - generic [ref=f2e782]: mushfiq@gadgetexpress.com.bd
+                - generic [ref=f2e783]: +880 1819-204918
+              - cell "gpt-4o-mini" [ref=f2e784]
+              - cell "34,100 active threads" [ref=f2e789]:
+                - generic [ref=f2e790]: 34,100
+                - generic [ref=f2e791]: active threads
+              - cell "128,400" [ref=f2e792]
+              - cell [ref=f2e793]:
+                - generic [ref=f2e794]:
+                  - generic [ref=f2e795]: 3 FB
+                  - generic [ref=f2e797]: 4 WA
+              - cell "BDT (৳) ৳ 4,820 Bal · ৳ 0/msg" [ref=f2e799]:
+                - generic [ref=f2e800]:
+                  - combobox [ref=f2e801]:
+                    - option "BDT (৳)" [selected]
+                    - option "USD ($)"
+                    - option "EUR (€)"
+                    - option "GBP (£)"
+                    - option "AED (د.إ)"
+                    - option "INR (₹)"
+                  - generic [ref=f2e802]: ৳ 4,820
+                - generic [ref=f2e803]:
+                  - generic [ref=f2e804]: Bal
+                  - generic [ref=f2e805]: ·
+                  - generic [ref=f2e806]: ৳ 0/msg
+              - cell "Active" [ref=f2e807]
+              - cell [ref=f2e810]:
+                - generic [ref=f2e811]:
+                  - button "Support Session" [ref=f2e812]
+                  - button "Suspend" [ref=f2e815]
+            - row [ref=f2e816]:
+              - cell "Aarong Handcrafts Reseller ten_cloud_03" [ref=f2e817]:
+                - generic [ref=f2e818]: Aarong Handcrafts Reseller
+                - generic [ref=f2e819]: ten_cloud_03
+              - cell "Samira Huq samira@aarongreseller.com +880 1911-382910" [ref=f2e820]:
+                - generic [ref=f2e821]: Samira Huq
+                - generic [ref=f2e822]: samira@aarongreseller.com
+                - generic [ref=f2e823]: +880 1911-382910
+              - cell "gemini-2.5-flash" [ref=f2e824]
+              - cell "2,840 active threads" [ref=f2e829]:
+                - generic [ref=f2e830]: 2,840
+                - generic [ref=f2e831]: active threads
+              - cell "11,200" [ref=f2e832]
+              - cell [ref=f2e833]:
+                - generic [ref=f2e834]:
+                  - generic [ref=f2e835]: 1 FB
+                  - generic [ref=f2e837]: 0 WA
+              - cell "BDT (৳) ৳ 890 Bal · ৳ 0/msg" [ref=f2e839]:
+                - generic [ref=f2e840]:
+                  - combobox [ref=f2e841]:
+                    - option "BDT (৳)" [selected]
+                    - option "USD ($)"
+                    - option "EUR (€)"
+                    - option "GBP (£)"
+                    - option "AED (د.إ)"
+                    - option "INR (₹)"
+                  - generic [ref=f2e842]: ৳ 890
+                - generic [ref=f2e843]:
+                  - generic [ref=f2e844]: Bal
+                  - generic [ref=f2e845]: ·
+                  - generic [ref=f2e846]: ৳ 0/msg
+              - cell "Active" [ref=f2e847]
+              - cell [ref=f2e850]:
+                - generic [ref=f2e851]:
+                  - button "Support Session" [ref=f2e852]
+                  - button "Suspend" [ref=f2e855]
+            - row [ref=f2e856]:
+              - cell "Dhaka Pharma & Care ten_med_04" [ref=f2e857]:
+                - generic [ref=f2e858]: Dhaka Pharma & Care
+                - generic [ref=f2e859]: ten_med_04
+              - cell "Dr. Kazi Mahfuz mahfuz@dhakapharma.com +880 1711-002941" [ref=f2e860]:
+                - generic [ref=f2e861]: Dr. Kazi Mahfuz
+                - generic [ref=f2e862]: mahfuz@dhakapharma.com
+                - generic [ref=f2e863]: +880 1711-002941
+              - cell "claude-3-5-sonnet" [ref=f2e864]
+              - cell "61,200 active threads" [ref=f2e869]:
+                - generic [ref=f2e870]: 61,200
+                - generic [ref=f2e871]: active threads
+              - cell "234,100" [ref=f2e872]
+              - cell [ref=f2e873]:
+                - generic [ref=f2e874]:
+                  - generic [ref=f2e875]: 4 FB
+                  - generic [ref=f2e877]: 6 WA
+              - cell "BDT (৳) ৳ 12,500 Bal · ৳ 0/msg" [ref=f2e879]:
+                - generic [ref=f2e880]:
+                  - combobox [ref=f2e881]:
+                    - option "BDT (৳)" [selected]
+                    - option "USD ($)"
+                    - option "EUR (€)"
+                    - option "GBP (£)"
+                    - option "AED (د.إ)"
+                    - option "INR (₹)"
+                  - generic [ref=f2e882]: ৳ 12,500
+                - generic [ref=f2e883]:
+                  - generic [ref=f2e884]: Bal
+                  - generic [ref=f2e885]: ·
+                  - generic [ref=f2e886]: ৳ 0/msg
+              - cell "Active" [ref=f2e887]
+              - cell [ref=f2e890]:
+                - generic [ref=f2e891]:
+                  - button "Support Session" [ref=f2e892]
+                  - button "Suspend" [ref=f2e895]
+            - row [ref=f2e896]:
+              - cell "QuickBite Cloud Kitchens ten_quick_05" [ref=f2e897]:
+                - generic [ref=f2e898]: QuickBite Cloud Kitchens
+                - generic [ref=f2e899]: ten_quick_05
+              - cell "Rashedul Karim rashed@quickbitebd.com +880 1612-491029" [ref=f2e900]:
+                - generic [ref=f2e901]: Rashedul Karim
+                - generic [ref=f2e902]: rashed@quickbitebd.com
+                - generic [ref=f2e903]: +880 1612-491029
+              - cell "gemini-2.5-flash" [ref=f2e904]
+              - cell "0 active threads" [ref=f2e909]:
+                - generic [ref=f2e910]: "0"
+                - generic [ref=f2e911]: active threads
+              - cell "0" [ref=f2e912]
+              - cell [ref=f2e913]:
+                - generic [ref=f2e914]:
+                  - generic [ref=f2e915]: 2 FB
+                  - generic [ref=f2e917]: 1 WA
+              - cell "USD ($) $50.00 Bal · $0.00/msg" [ref=f2e919]:
+                - generic [ref=f2e920]:
+                  - combobox [ref=f2e921]:
+                    - option "BDT (৳)"
+                    - option "USD ($)" [selected]
+                    - option "EUR (€)"
+                    - option "GBP (£)"
+                    - option "AED (د.إ)"
+                    - option "INR (₹)"
+                  - generic [ref=f2e922]: $50.00
+                - generic [ref=f2e923]:
+                  - generic [ref=f2e924]: Bal
+                  - generic [ref=f2e925]: ·
+                  - generic [ref=f2e926]: $0.00/msg
+              - cell "Suspended" [ref=f2e927]
+              - cell [ref=f2e929]:
+                - generic [ref=f2e930]:
+                  - button "Support Session" [ref=f2e931]
+                  - button "Reactivate" [ref=f2e934]

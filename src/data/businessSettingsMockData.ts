@@ -15,7 +15,7 @@ export const INITIAL_BUSINESS_PROFILE: BusinessProfile = {
   supportEmail: 'care@bengalloom.com.bd',
   businessHoursStart: '09:00',
   businessHoursEnd: '22:00',
-  timeZone: 'Asia/Dhaka (GMT+6)',
+  timeZone: 'Asia/Dhaka',
   operatingLocations: ['Dhaka', 'Chattogram', 'Sylhet', 'Rajshahi', 'Khulna'],
 };
 

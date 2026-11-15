@@ -2,21 +2,13 @@ import React, { useState } from 'react';
 import { WhatsAppConnection, WhatsAppTemplate } from '../../types/channels';
 import {
   CheckCircle2,
-  AlertCircle,
   RefreshCw,
   Phone,
   ShieldCheck,
-  Send,
   Radio,
   FileText,
   Lock,
-  Plus,
-  Clock,
-  ExternalLink,
   ChevronRight,
-  Layers,
-  Sparkles,
-  Info,
 } from 'lucide-react';
 
 interface WhatsAppConnectionViewProps {
@@ -30,47 +22,7 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
   onUpdateConnection,
   onShowToast,
 }) => {
-  const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
-  const [isSyncingTemplates, setIsSyncingTemplates] = useState(false);
-  const [isTestPingLoading, setIsTestPingLoading] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<WhatsAppTemplate | null>(null);
-  const [tokenInput, setTokenInput] = useState('');
-
-  const handleSyncTemplates = () => {
-    setIsSyncingTemplates(true);
-    setTimeout(() => {
-      setIsSyncingTemplates(false);
-      onShowToast('Synced 4 WhatsApp approved message templates from Meta Business Manager');
-    }, 900);
-  };
-
-  const handleTestPing = () => {
-    setIsTestPingLoading(true);
-    setTimeout(() => {
-      setIsTestPingLoading(false);
-      onShowToast('WhatsApp Cloud API test message delivered with status 200 OK');
-      onUpdateConnection({
-        ...connection,
-        lastInboundAt: 'Just now',
-        lastOutboundAt: 'Just now',
-        current24hWindowSent: connection.current24hWindowSent + 1,
-      });
-    }, 850);
-  };
-
-  const handleRotateCredentials = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsRotateModalOpen(false);
-    setTokenInput('');
-    onShowToast('WhatsApp Cloud API permanent system user token updated & authenticated');
-    onUpdateConnection({
-      ...connection,
-      tokenHealth: {
-        ...connection.tokenHealth,
-        lastRefreshed: 'Just now (Admin rotated)',
-      },
-    });
-  };
 
   const handleToggleDisconnect = () => {
     const nextStatus = connection.status === 'connected' ? 'disconnected' : 'connected';
@@ -135,33 +87,24 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
           <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
-              onClick={handleTestPing}
-              disabled={isTestPingLoading}
+              disabled
               className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 disabled:opacity-50"
             >
-              <Radio className={`w-3.5 h-3.5 text-emerald-600 ${isTestPingLoading ? 'animate-ping' : ''}`} />
-              <span>{isTestPingLoading ? 'Sending...' : 'Test WhatsApp Ping'}</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setIsRotateModalOpen(true)}
-              className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-white border border-slate-200 hover:bg-slate-50 text-slate-700 transition flex items-center gap-1.5 shadow-2xs"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Rotate Credentials</span>
+              <Radio className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Live message test is not configured</span>
             </button>
 
             <button
               type="button"
               onClick={handleToggleDisconnect}
+              disabled={connection.status !== 'connected'}
               className={`px-3.5 py-2 rounded-xl text-xs font-semibold transition ${
                 connection.status === 'connected'
                   ? 'bg-rose-50 border border-rose-200 text-rose-700 hover:bg-rose-100'
                   : 'bg-emerald-600 text-white hover:bg-emerald-700'
               }`}
             >
-              {connection.status === 'connected' ? 'Disconnect WABA' : 'Connect WABA'}
+              {connection.status === 'connected' ? 'Disconnect WABA' : 'Connect with Facebook above'}
             </button>
           </div>
         </div>
@@ -176,10 +119,9 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
               <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-xs" />
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="text-base font-bold text-emerald-800">GREEN</span>
-              <span className="text-xs text-emerald-600 font-medium">(High Quality)</span>
+              <span className="text-base font-bold text-emerald-800">{connection.qualityRating === 'UNKNOWN' ? 'Not reported' : connection.qualityRating}</span>
             </div>
-            <p className="text-[11px] text-emerald-700">Zero policy violation strikes</p>
+            <p className="text-[11px] text-slate-500">Quality rating returned by Meta, when available.</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1">
@@ -187,16 +129,10 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
               Messaging Tier Limit
             </span>
             <div className="text-sm font-bold text-slate-900">
-              10,000 / 24 Hours
-            </div>
-            <div className="w-full bg-slate-200 h-1.5 rounded-full overflow-hidden mt-1.5">
-              <div
-                className="bg-emerald-500 h-full rounded-full"
-                style={{ width: `${(connection.current24hWindowSent / 10000) * 100}%` }}
-              />
+              {connection.messagingTierLimit || 'Not reported by Meta'}
             </div>
             <p className="text-[10px] text-slate-500 pt-0.5">
-              {connection.current24hWindowSent.toLocaleString()} used today ({((connection.current24hWindowSent / 10000) * 100).toFixed(1)}%)
+              Message volume is not collected by this backend.
             </p>
           </div>
 
@@ -207,14 +143,14 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
             <div className="space-y-0.5 text-xs text-slate-700">
               <div className="flex justify-between">
                 <span className="text-slate-400">Inbound:</span>
-                <span className="font-semibold text-slate-800">{connection.lastInboundAt}</span>
+                <span className="font-semibold text-slate-800">{connection.lastInboundAt || 'Not recorded'}</span>
               </div>
               <div className="flex justify-between">
                 <span className="text-slate-400">Outbound:</span>
-                <span className="font-semibold text-slate-800">{connection.lastOutboundAt}</span>
+                <span className="font-semibold text-slate-800">{connection.lastOutboundAt || 'Not recorded'}</span>
               </div>
             </div>
-            <p className="text-[10px] text-slate-400 pt-0.5">Cloud API webhook synced</p>
+            <p className="text-[10px] text-slate-400 pt-0.5">Webhook activity logging is not configured here.</p>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-50/80 border border-slate-100 space-y-1">
@@ -222,12 +158,9 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
               Cloud Throughput
             </span>
             <div className="text-sm font-bold text-slate-900">
-              80 msg / sec
+              {connection.throughputLimit || 'Not reported by Meta'}
             </div>
-            <p className="text-[11px] text-slate-500">Dedicated Meta edge queue</p>
-            <span className="text-[10px] font-medium text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded">
-              Zero Backpressure
-            </span>
+            <p className="text-[11px] text-slate-500">Throughput metrics are not collected by this backend.</p>
           </div>
         </div>
       </div>
@@ -245,12 +178,11 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
             </div>
             <button
               type="button"
-              onClick={handleSyncTemplates}
-              disabled={isSyncingTemplates}
+              disabled
               className="text-xs font-semibold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 px-3 py-1.5 rounded-xl border border-emerald-200/70 transition flex items-center gap-1.5"
             >
-              <RefreshCw className={`w-3 h-3 ${isSyncingTemplates ? 'animate-spin' : ''}`} />
-              <span>{isSyncingTemplates ? 'Syncing...' : 'Sync Meta Templates'}</span>
+              <RefreshCw className="w-3 h-3" />
+              <span>Template sync is not configured</span>
             </button>
           </div>
 
@@ -347,62 +279,11 @@ export const WhatsAppConnectionView: React.FC<WhatsAppConnectionViewProps> = ({
               Auto-Recovery & Fallback
             </span>
             <p className="text-[11px] text-slate-600 leading-relaxed">
-              If WhatsApp Cloud API reports a temporary network timeout, all inbound customer messages are automatically buffered in our idempotent queue with zero loss.
+              Provider delivery and retry health are not measured by this connection screen.
             </p>
           </div>
         </div>
       </div>
-
-      {/* Rotate Credentials Modal */}
-      {isRotateModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl p-6 sm:p-7 max-w-md w-full shadow-2xl border border-slate-200 space-y-5 animate-in fade-in zoom-in-95">
-            <div>
-              <h3 className="text-base font-bold text-slate-900">
-                Rotate WhatsApp System User Token
-              </h3>
-              <p className="text-xs text-slate-500 mt-1">
-                Enter a newly generated permanent access token from Meta Business Manager.
-              </p>
-            </div>
-
-            <form onSubmit={handleRotateCredentials} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
-                  New WhatsApp Cloud API Access Token
-                </label>
-                <input
-                  type="password"
-                  value={tokenInput}
-                  onChange={(e) => setTokenInput(e.target.value)}
-                  placeholder="Paste EAABk... token from Meta System User"
-                  required
-                  className="w-full px-3.5 py-2.5 text-xs rounded-xl border border-slate-200 focus:outline-hidden focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-mono"
-                />
-                <p className="text-[11px] text-slate-400">
-                  Must possess `whatsapp_business_messaging` and `whatsapp_business_management` permissions.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-end gap-2.5 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsRotateModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-medium text-slate-600 hover:bg-slate-100 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl text-xs font-semibold bg-emerald-600 hover:bg-emerald-700 text-white transition shadow-xs"
-                >
-                  Update & Encrypt Token
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* Template Detail Preview Modal */}
       {selectedTemplate && (

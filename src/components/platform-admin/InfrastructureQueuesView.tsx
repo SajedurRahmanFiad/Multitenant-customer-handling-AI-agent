@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import {
-  Server,
-  Database,
-  Layers,
   Cpu,
+  Layers,
   Activity,
   RotateCw,
   AlertOctagon,
@@ -17,7 +15,7 @@ import { QueueMetrics, DeadLetterJob } from '../../types/platformAdmin';
 interface InfrastructureQueuesViewProps {
   metrics: QueueMetrics;
   dlqJobs: DeadLetterJob[];
-  onRetryDlqJob: (jobId: string) => void;
+  onRetryDlqJob: (jobId: string) => Promise<void>;
   onDismissDlqJob: (jobId: string) => void;
 }
 
@@ -30,17 +28,14 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
   const [selectedJobPayload, setSelectedJobPayload] = useState<DeadLetterJob | null>(null);
   const [retriedJobId, setRetriedJobId] = useState<string | null>(null);
 
-  const handleRetry = (jobId: string) => {
+  const handleRetry = async (jobId: string) => {
     setRetriedJobId(jobId);
-    setTimeout(() => {
-      onRetryDlqJob(jobId);
-      setRetriedJobId(null);
-    }, 1000);
+    try { await onRetryDlqJob(jobId); } finally { setRetriedJobId(null); }
   };
 
   return (
     <div className="space-y-6">
-      {/* Top Level Real-time Cluster Overview (Light Mode) */}
+      {/* Queue activity and monitoring coverage */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Webhook Ingestion */}
         <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs">
@@ -54,9 +49,9 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900">
-              {metrics.incomingWebhookRatePerSec}
+              {metrics.incomingWebhookRatePerSec.toFixed(2)}
             </span>
-            <span className="text-xs text-slate-500">reqs / sec</span>
+            <span className="text-xs text-slate-500">avg events / sec, 24h</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
             {metrics.completedJobs24h.toLocaleString()} processed in last 24h
@@ -67,7 +62,7 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
         <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Active Queue Pipeline
+              Background Jobs
             </span>
             <div className="p-2 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-xl">
               <Layers className="w-4 h-4" />
@@ -80,7 +75,7 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
             <span className="text-xs text-slate-500">active ({metrics.queuedJobs} queued)</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            Oldest queue wait: {metrics.oldestJobWaitTimeMs}ms (Well within SLA)
+            Oldest queued job: {metrics.oldestJobWaitTimeMs}ms
           </p>
         </div>
 
@@ -88,7 +83,7 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
         <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Worker Node Fleet
+              Worker Monitoring
             </span>
             <div className="p-2 bg-blue-50 text-blue-700 border border-blue-200 rounded-xl">
               <Cpu className="w-4 h-4" />
@@ -96,14 +91,14 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900">
-              {metrics.workerCountActive} Nodes
+              Not configured
             </span>
             <span className="text-xs font-semibold text-emerald-600">
-              CPU {metrics.workerCpuPercent}%
+              CPU unavailable
             </span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            Cluster Memory: {metrics.workerMemoryPercent}% allocated
+            Worker count and resource usage are not collected by this backend.
           </p>
         </div>
 
@@ -111,20 +106,20 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
         <div className="p-5 bg-white border border-slate-200 rounded-2xl shadow-xs">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-              Postgres & Redis Health
+              Database & Cache Monitoring
             </span>
             <div className="p-2 bg-purple-50 text-purple-700 border border-purple-200 rounded-xl">
-              <Database className="w-4 h-4" />
+              <Activity className="w-4 h-4" />
             </div>
           </div>
           <div className="mt-2 flex items-baseline gap-2">
             <span className="text-2xl font-bold text-slate-900">
-              {metrics.dbPoolActive} / {metrics.dbPoolMax}
+              Not configured
             </span>
             <span className="text-xs text-slate-500">DB conns</span>
           </div>
           <p className="text-[11px] text-slate-500 mt-1">
-            Redis hit rate {metrics.redisHitRatePercent}% ({metrics.redisMemoryUsedMB} MB)
+            Connection pool and Redis metrics are not collected by this backend.
           </p>
         </div>
       </div>
@@ -152,7 +147,7 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
           </div>
 
           <div className="text-xs text-slate-400">
-            Auto-purges discarded items after 14 days
+            Failed jobs remain available until dismissed.
           </div>
         </div>
 
@@ -163,7 +158,7 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
               Dead-Letter Queue is Clean
             </h4>
             <p className="text-xs text-slate-500 mt-1">
-              Zero jobs failed or dropped in the queue pipeline.
+              No unresolved dead-letter jobs.
             </p>
           </div>
         ) : (
@@ -282,8 +277,8 @@ export const InfrastructureQueuesView: React.FC<InfrastructureQueuesViewProps> =
             </div>
 
             <div className="p-3 bg-amber-50 border border-amber-200 rounded-xl text-xs text-amber-900">
-              <span className="font-bold block mb-0.5">Automated PII & Secret Redaction:</span>
-              Auth tokens, phone numbers beyond country code, and payment card numbers are automatically sanitized before entering the DLQ viewer.
+              <span className="font-bold block mb-0.5">Payload privacy:</span>
+              Event payload contents are hidden in this view.
             </div>
 
             <div>

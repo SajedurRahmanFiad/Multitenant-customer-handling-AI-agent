@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useUrlQueryState } from '../../hooks/useUrlQueryState';
 import {
   KnowledgeSource,
   SourceType,
@@ -13,7 +14,6 @@ import {
   Plus,
   Search,
   RefreshCw,
-  Eye,
   Trash2,
   AlertCircle,
   CheckCircle2,
@@ -24,10 +24,9 @@ import {
 
 interface KnowledgeSourcesViewProps {
   sources: KnowledgeSource[];
-  onAddSource: (newSource: Omit<KnowledgeSource, 'id'>) => void;
+  onAddSource: (newSource: Omit<KnowledgeSource, 'id'> & { sourceUrl?: string; content?: string }) => void;
   onRefreshSource: (id: string) => void;
   onDeleteSource: (id: string) => void;
-  onToggleActive: (id: string) => void;
 }
 
 export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
@@ -35,9 +34,8 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
   onAddSource,
   onRefreshSource,
   onDeleteSource,
-  onToggleActive,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useUrlQueryState<string>('q', '', undefined, true);
   const [selectedType, setSelectedType] = useState<string>('all');
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [viewingSource, setViewingSource] = useState<KnowledgeSource | null>(null);
@@ -46,9 +44,8 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
   const [name, setName] = useState('');
   const [type, setType] = useState<SourceType>('website');
   const [url, setUrl] = useState('');
-  const [crawlScope, setCrawlScope] = useState<'single' | 'selected' | 'approved'>('selected');
   const [manualText, setManualText] = useState('');
-  const [fileLabel, setFileLabel] = useState('');
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
 
   const filteredSources = sources.filter((s) => {
     const matchesSearch =
@@ -58,39 +55,51 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
     return matchesSearch && matchesType;
   });
 
-  const handleCreateSource = (e: React.FormEvent) => {
+  const handleCreateSource = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     let origin = '';
     if (type === 'website') {
-      origin = `${url || 'https://myshop.com.bd'} (${crawlScope === 'single' ? 'Single URL only' : crawlScope === 'selected' ? 'Selected approved pages' : 'Domain sitemap approved links'})`;
+      origin = `${url} (Single public page; linked pages are not crawled)`;
     } else if (type === 'document') {
-      origin = fileLabel || 'Uploaded Document (PDF/DOCX)';
+      origin = selectedFile?.name || 'Uploaded Document (PDF/DOCX)';
+    } else if (type === 'catalogue') {
+      origin = selectedFile?.name || 'Uploaded Product CSV';
     } else if (type === 'manual') {
       origin = `Manual text entry (${manualText.length} characters)`;
     } else if (type === 'sheets') {
       origin = url || 'Google Sheets Live Sync';
-    } else {
-      origin = 'Imported dataset';
     }
 
+    let sourceUrl = type === 'website' || type === 'sheets' ? url : undefined;
+    if (selectedFile) {
+      try {
+        const uploaded = await (await import('../../lib/api')).api.upload<{ url: string }>('/knowledge/upload', selectedFile);
+        sourceUrl = uploaded.url;
+      } catch (error) {
+        window.alert(error instanceof Error ? error.message : 'File upload failed');
+        return;
+      }
+    }
     onAddSource({
       name,
       type,
-      status: 'ready',
-      lastIndexed: 'Just now',
-      lastContentUpdate: 'Just now',
-      recordChunksCount: Math.floor(Math.random() * 30) + 10,
+      status: 'queued',
+      lastIndexed: '',
+      lastContentUpdate: '',
+      recordChunksCount: 0,
       originDetails: origin,
       isActive: true,
+      sourceUrl,
+      content: type === 'manual' ? manualText : undefined,
     });
 
     setIsAddModalOpen(false);
     setName('');
     setUrl('');
     setManualText('');
-    setFileLabel('');
+    setSelectedFile(null);
   };
 
   const getSourceIcon = (t: SourceType) => {
@@ -133,7 +142,7 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
           >
             <option value="all">All Source Types</option>
             <option value="website">Websites</option>
-            <option value="document">Documents (PDF/DOCX)</option>
+            <option value="document">Documents (TXT/CSV)</option>
             <option value="faq">FAQ Entries</option>
             <option value="catalogue">Product Catalogue</option>
             <option value="sheets">Google Sheets</option>
@@ -154,22 +163,21 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
       {/* Sources Table */}
       <div className="bg-white rounded-2xl border border-slate-200/90 overflow-hidden shadow-xs">
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
+          <table className="w-full min-w-[900px] table-fixed text-left text-xs">
             <thead>
               <tr className="border-b border-slate-100 bg-slate-50/75 text-slate-500 font-semibold">
-                <th className="py-3 px-4">Source Name</th>
+                <th className="w-[340px] max-w-[340px] py-3 px-4">Source Name</th>
                 <th className="py-3 px-4">Type</th>
                 <th className="py-3 px-4">Status</th>
                 <th className="py-3 px-4">Last Indexed</th>
-                <th className="py-3 px-4">Last Content Update</th>
-                <th className="py-3 px-4 text-right">Chunks / Records</th>
+                <th className="py-3 px-4">Uploaded at</th>
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
               {filteredSources.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="text-center py-8 text-slate-400">
+                  <td colSpan={6} className="text-center py-8 text-slate-400">
                     No knowledge sources match your search.
                   </td>
                 </tr>
@@ -177,15 +185,24 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                 filteredSources.map((source) => (
                   <tr
                     key={source.id}
-                    className="hover:bg-slate-50/60 transition-colors group"
+                    onClick={() => setViewingSource(source)}
+                    onKeyDown={(event) => {
+                      if (event.target !== event.currentTarget) return;
+                      if (event.key === 'Enter' || event.key === ' ') {
+                        event.preventDefault();
+                        setViewingSource(source);
+                      }
+                    }}
+                    tabIndex={0}
+                    className="hover:bg-slate-50/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-slate-500 transition-colors group cursor-pointer"
                   >
-                    <td className="py-3.5 px-4">
+                    <td className="w-[340px] max-w-[340px] py-3.5 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-8 h-8 rounded-xl bg-slate-100 border border-slate-200/80 flex items-center justify-center shrink-0">
                           {getSourceIcon(source.type)}
                         </div>
                         <div className="min-w-0">
-                          <div className="font-semibold text-slate-900 truncate">
+                          <div title={source.name} className="font-semibold text-slate-900 truncate">
                             {source.name}
                           </div>
                           <div className="text-[11px] text-slate-400 truncate">
@@ -240,23 +257,14 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                       {source.lastContentUpdate}
                     </td>
 
-                    <td className="py-3.5 px-4 text-right font-mono font-semibold text-slate-800">
-                      {source.recordChunksCount}
-                    </td>
-
                     <td className="py-3.5 px-4 text-right">
                       <div className="flex items-center justify-end gap-1">
                         <button
                           type="button"
-                          onClick={() => setViewingSource(source)}
-                          title="View source details and chunk breakdown"
-                          className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onRefreshSource(source.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onRefreshSource(source.id);
+                          }}
                           title="Trigger re-index synchronization"
                           className="p-1.5 text-slate-400 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors"
                         >
@@ -264,19 +272,10 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                         </button>
                         <button
                           type="button"
-                          onClick={() => onToggleActive(source.id)}
-                          title={source.isActive ? 'Disable source' : 'Enable source'}
-                          className={`px-2 py-1 text-[10px] font-semibold rounded-md border transition-colors ${
-                            source.isActive
-                              ? 'border-slate-200 text-slate-600 hover:bg-slate-100'
-                              : 'border-amber-300 bg-amber-50 text-amber-800'
-                          }`}
-                        >
-                          {source.isActive ? 'Active' : 'Disabled'}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onDeleteSource(source.id)}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            onDeleteSource(source.id);
+                          }}
                           title="Delete source"
                           className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
                         >
@@ -324,8 +323,7 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                   {(
                     [
                       { id: 'website', label: 'Website URL', icon: Globe },
-                      { id: 'document', label: 'PDF / DOCX', icon: FileText },
-                      { id: 'faq', label: 'FAQ Set', icon: HelpCircle },
+                      { id: 'document', label: 'Text Document', icon: FileText },
                       { id: 'catalogue', label: 'Product CSV', icon: Package },
                       { id: 'manual', label: 'Manual Text', icon: Edit3 },
                       { id: 'sheets', label: 'Google Sheets', icon: FileSpreadsheet },
@@ -337,7 +335,10 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                       <button
                         key={t.id}
                         type="button"
-                        onClick={() => setType(t.id)}
+                        onClick={() => {
+                          setType(t.id);
+                          setSelectedFile(null);
+                        }}
                         className={`p-2.5 rounded-xl border text-left flex items-center gap-2 text-xs transition-colors ${
                           isSelected
                             ? 'bg-slate-900 text-white border-slate-900 shadow-xs'
@@ -372,7 +373,7 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                 <div className="space-y-3 p-3.5 rounded-2xl bg-slate-50 border border-slate-200">
                   <div>
                     <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Website URL or Sitemap
+                      Public Website Page URL
                     </label>
                     <input
                       type="url"
@@ -385,50 +386,30 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                   </div>
 
                   <div>
-                    <label className="block text-xs font-semibold text-slate-700 mb-1">
-                      Crawl Scope & Boundaries
-                    </label>
-                    <div className="space-y-1 text-xs">
-                      {[
-                        { id: 'single', label: 'Single URL only (no child links)' },
-                        { id: 'selected', label: 'Selected approved pages only (/shipping, /faq, /terms)' },
-                        { id: 'approved', label: 'Sitemap links (exclude /cart, /checkout, /account)' },
-                      ].map((scope) => (
-                        <label key={scope.id} className="flex items-center gap-2 cursor-pointer text-slate-600">
-                          <input
-                            type="radio"
-                            name="crawlScope"
-                            checked={crawlScope === scope.id}
-                            onChange={() => setCrawlScope(scope.id as any)}
-                            className="text-slate-900 focus:ring-slate-900"
-                          />
-                          <span>{scope.label}</span>
-                        </label>
-                      ))}
-                    </div>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Note: AI Studio enforces strict safety boundaries and will never index private user accounts or checkout pages.
-                    </p>
+                    <p className="text-[11px] text-slate-500">Only this public page is imported. Redirects, private networks, linked pages, and files above 2MB are not fetched.</p>
                   </div>
                 </div>
               )}
 
               {/* Document Upload */}
               {type === 'document' && (
-                <div className="p-4 border-2 border-dashed border-slate-200 rounded-2xl text-center space-y-2 bg-slate-50">
+                <label className="relative block p-4 border-2 border-dashed border-slate-200 rounded-2xl text-center space-y-2 bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                  <input
+                    type="file"
+                    required
+                    accept=".txt,.csv,text/plain,text/csv"
+                    onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    aria-label="Upload TXT or CSV document"
+                  />
                   <Upload className="w-6 h-6 text-slate-400 mx-auto" />
                   <div className="text-xs text-slate-600">
-                    <span className="font-semibold text-slate-900">Click to upload</span> or drag and drop
+                    <span className="font-semibold text-slate-900">
+                      {selectedFile?.name || 'Click to upload a text document'}
+                    </span>
                   </div>
-                  <p className="text-[10px] text-slate-400">PDF, DOCX, TXT or CSV (Max 25MB)</p>
-                  <input
-                    type="text"
-                    value={fileLabel}
-                    onChange={(e) => setFileLabel(e.target.value)}
-                    placeholder="Or specify filename e.g. Warranty_Terms_Q4.pdf"
-                    className="w-full px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-lg text-center"
-                  />
-                </div>
+                  <p className="text-[10px] text-slate-400">TXT or CSV, up to 20MB upload / 2MB indexed text</p>
+                </label>
               )}
 
               {/* Manual Written Information */}
@@ -439,6 +420,7 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                   </label>
                   <textarea
                     rows={4}
+                    required
                     value={manualText}
                     onChange={(e) => setManualText(e.target.value)}
                     placeholder="Paste or write operational facts, courier exceptions, or customer guidelines..."
@@ -447,17 +429,39 @@ export const KnowledgeSourcesView: React.FC<KnowledgeSourcesViewProps> = ({
                 </div>
               )}
 
-              {/* Google Sheets / Catalogue */}
-              {(type === 'sheets' || type === 'catalogue') && (
+              {/* Product CSV Upload */}
+              {type === 'catalogue' && (
+                <label className="relative block p-4 border-2 border-dashed border-slate-200 rounded-2xl text-center space-y-2 bg-slate-50 hover:bg-slate-100 cursor-pointer">
+                  <input
+                    type="file"
+                    required
+                    accept=".csv,text/csv"
+                    onChange={(event) => setSelectedFile(event.target.files?.[0] ?? null)}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    aria-label="Upload product CSV file"
+                  />
+                  <Upload className="w-6 h-6 text-slate-400 mx-auto" />
+                  <div className="text-xs text-slate-600">
+                    <span className="font-semibold text-slate-900">
+                      {selectedFile?.name || 'Click to upload a product CSV'}
+                    </span>
+                  </div>
+                  <p className="text-[10px] text-slate-400">CSV file</p>
+                </label>
+              )}
+
+              {/* Google Sheets */}
+              {type === 'sheets' && (
                 <div>
                   <label className="block text-xs font-semibold text-slate-700 mb-1">
-                    {type === 'sheets' ? 'Google Sheet Share Link (Viewer Access)' : 'Product Catalogue Feed URL / File'}
+                    Google Sheet Share Link (Viewer Access)
                   </label>
                   <input
-                    type="text"
+                    type="url"
+                    required
                     value={url}
                     onChange={(e) => setUrl(e.target.value)}
-                    placeholder={type === 'sheets' ? 'https://docs.google.com/spreadsheets/d/...' : 'Catalog CSV URL or endpoint'}
+                    placeholder="https://docs.google.com/spreadsheets/d/..."
                     className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900"
                   />
                 </div>

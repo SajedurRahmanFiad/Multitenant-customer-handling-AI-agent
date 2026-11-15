@@ -3,10 +3,7 @@ export type PlatformAdminTab =
   | 'currencies'
   | 'global_pipeline'
   | 'provider_registry'
-  | 'cost_control'
-  | 'infrastructure_queues'
-  | 'system_health'
-  | 'security_compliance';
+  | 'queues';
 
 // Global Pipeline Layer Template (Applies to all tenants globally)
 export interface GlobalPipelineLayer {
@@ -81,7 +78,7 @@ export interface AIProviderModel {
   modelId: string;
   displayName: string;
   provider: 'Google Gemini' | 'OpenAI' | 'Anthropic' | 'Groq / Llama' | 'Ollama Dedicated';
-  secretReference: string; // e.g. "vault://kms-prod/gemini-prod-key" (NEVER plaintext)
+  apiKey: string;
   endpointUrl: string;
   capabilities: ('text' | 'vision' | 'tools' | 'json' | 'embeddings' | 'voice')[];
   costPerMillionInputUSD: number;
@@ -95,27 +92,7 @@ export interface AIProviderModel {
   isFallback: boolean;
 }
 
-// 3. Usage & Cost Control
-export interface PlatformFinancialMetrics {
-  totalMonthlyRevenueUSD: number;
-  totalMonthlyProviderCostUSD: number;
-  grossMarginPercent: number;
-  totalTokensConsumed24h: number;
-  currentBurnRateTokensPerSec: number;
-  averageCostPerConversationUSD: number;
-  anomalyProtectionPolicy: 'switch_to_fallback' | 'safe_non_ai_message' | 'pause_automation';
-}
-
-export interface TopSpendingTenant {
-  tenantId: string;
-  businessName: string;
-  primaryModel: string;
-  spendUSD: number;
-  tokenCount: number;
-  conversationsCount: number;
-}
-
-// 4. Infrastructure & Queue Monitoring
+// 3. Infrastructure & Queue Monitoring
 export interface QueueMetrics {
   incomingWebhookRatePerSec: number;
   queuedJobs: number;
@@ -123,14 +100,14 @@ export interface QueueMetrics {
   completedJobs24h: number;
   failedDlqJobs: number;
   oldestJobWaitTimeMs: number;
-  workerCountActive: number;
-  workerCpuPercent: number;
-  workerMemoryPercent: number;
-  dbPoolActive: number;
-  dbPoolMax: number;
-  dbPoolWaitTimeMs: number;
-  redisMemoryUsedMB: number;
-  redisHitRatePercent: number;
+  workerCountActive: number | null;
+  workerCpuPercent: number | null;
+  workerMemoryPercent: number | null;
+  dbPoolActive: number | null;
+  dbPoolMax: number | null;
+  dbPoolWaitTimeMs: number | null;
+  redisMemoryUsedMB: number | null;
+  redisHitRatePercent: number | null;
 }
 
 export interface DeadLetterJob {
@@ -144,39 +121,3 @@ export interface DeadLetterJob {
   errorMessage: string;
 }
 
-// 5. System Health & Alerts
-export interface SystemComponentHealth {
-  name: string;
-  type: 'core' | 'external' | 'storage';
-  status: 'operational' | 'degraded' | 'down';
-  uptime90dPercent: number;
-  latencyMs: number;
-  lastIncident?: string;
-}
-
-export interface SystemIncident {
-  id: string;
-  title: string;
-  severity: 'p1_critical' | 'p2_major' | 'p3_minor';
-  status: 'investigating' | 'identified' | 'monitoring' | 'resolved';
-  affectedComponents: string[];
-  startedAt: string;
-  resolvedAt?: string;
-  summary: string;
-}
-
-// 6. Security & Compliance
-export interface SecurityComplianceReport {
-  lastIsolationAudit: string;
-  isolationStatus: 'passing' | 'warning' | 'failing';
-  kmsKeyRotationAgeDays: number;
-  nextRotationScheduled: string;
-  gdprPendingErasuresCount: number;
-  gdprCompletedErasuresCount: number;
-  soc2AuditExportReady: boolean;
-  backupStatus: 'healthy' | 'warning';
-  lastDisasterRecoveryTest: string;
-  disasterRecoveryTestOutcome: 'pass' | 'fail';
-  rpoMinutes: number;
-  rtoMinutes: number;
-}

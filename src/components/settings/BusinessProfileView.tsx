@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   BusinessProfile,
   ServiceSettings,
@@ -27,6 +27,10 @@ import {
 } from 'lucide-react';
 import { useCurrency } from '../../context/CurrencyContext';
 
+const TIME_ZONES = typeof Intl.supportedValuesOf === 'function'
+  ? Intl.supportedValuesOf('timeZone')
+  : ['UTC', 'America/New_York', 'Europe/London', 'Asia/Dhaka', 'Asia/Dubai', 'Asia/Kolkata', 'Asia/Tokyo', 'Australia/Sydney'];
+
 
 interface BusinessProfileViewProps {
   profile: BusinessProfile;
@@ -51,6 +55,8 @@ export const BusinessProfileView: React.FC<BusinessProfileViewProps> = ({
 }) => {
   const {
     currencies,
+    exchangeRatesStatus,
+    exchangeRatesUpdatedAt,
     activeTenantCurrency,
     selectedTenantId,
     setTenantCurrency,
@@ -64,6 +70,8 @@ export const BusinessProfileView: React.FC<BusinessProfileViewProps> = ({
   const [localProfile, setLocalProfile] = useState<BusinessProfile>(profile);
   const [localService, setLocalService] = useState<ServiceSettings>(service);
   const [localRetention, setLocalRetention] = useState<DataRetentionSettings>(retention);
+
+  useEffect(() => setLocalProfile(profile), [profile]);
 
   // Erasure form state
   const [erasureInput, setErasureInput] = useState('');
@@ -230,12 +238,18 @@ export const BusinessProfileView: React.FC<BusinessProfileViewProps> = ({
 
               <div>
                 <label className="block font-semibold text-slate-700 mb-1">Timezone</label>
-                <input
-                  type="text"
+                <select
                   value={localProfile.timeZone}
                   onChange={(e) => setLocalProfile({ ...localProfile, timeZone: e.target.value })}
                   className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900"
-                />
+                >
+                  {!TIME_ZONES.includes(localProfile.timeZone) && (
+                    <option value={localProfile.timeZone}>{localProfile.timeZone}</option>
+                  )}
+                  {TIME_ZONES.map((timeZone) => (
+                    <option key={timeZone} value={timeZone}>{timeZone.replaceAll('_', ' ')}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -281,7 +295,9 @@ export const BusinessProfileView: React.FC<BusinessProfileViewProps> = ({
                   ))}
                 </select>
                 <p className="text-[11px] text-slate-400">
-                  Configured and maintained globally in Platform Admin Settings.
+                  {exchangeRatesStatus === 'loading' && 'Loading live USD exchange rates...'}
+                  {exchangeRatesStatus === 'live' && `Live rates from open.er-api.com${exchangeRatesUpdatedAt ? `, updated ${new Date(exchangeRatesUpdatedAt * 1000).toLocaleString()}` : ''}.`}
+                  {exchangeRatesStatus === 'unavailable' && 'Live rates are temporarily unavailable; showing the last configured rates.'}
                 </p>
               </div>
 

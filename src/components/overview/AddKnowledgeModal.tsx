@@ -4,7 +4,7 @@ import { X, BookPlus, Check } from 'lucide-react';
 interface AddKnowledgeModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSuccess?: (title: string) => void;
+  onSuccess?: (source: { title: string; content: string; type: 'policy' | 'faq' | 'manual' }) => void;
 }
 
 export const AddKnowledgeModal: React.FC<AddKnowledgeModalProps> = ({ isOpen, onClose, onSuccess }) => {
@@ -21,7 +21,7 @@ export const AddKnowledgeModal: React.FC<AddKnowledgeModalProps> = ({ isOpen, on
     setIsSuccess(true);
     setTimeout(() => {
       setIsSuccess(false);
-      onSuccess?.(title);
+      onSuccess?.({ title, content: rawText, type: sourceType });
       setTitle('');
       setRawText('');
       onClose();

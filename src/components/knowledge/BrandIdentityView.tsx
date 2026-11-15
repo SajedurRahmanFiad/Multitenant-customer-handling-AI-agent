@@ -24,7 +24,19 @@ export const BrandIdentityView: React.FC<BrandIdentityViewProps> = ({
   onSave,
   onShowToast,
 }) => {
-  const [localData, setLocalData] = useState<BrandIdentityKnowledge>(brandIdentity);
+  const [localData, setLocalData] = useState<BrandIdentityKnowledge>(() => ({
+    ...brandIdentity,
+    tagline: brandIdentity?.tagline ?? '',
+    brandVoice: brandIdentity?.brandVoice ?? '',
+    tonePillars: brandIdentity?.tonePillars ?? [],
+    vocabularyGuidelines: {
+      preferredTerms: brandIdentity?.vocabularyGuidelines?.preferredTerms ?? [],
+      forbiddenTerms: brandIdentity?.vocabularyGuidelines?.forbiddenTerms ?? [],
+    },
+    greetingConvention: brandIdentity?.greetingConvention ?? '',
+    culturalNuances: brandIdentity?.culturalNuances ?? '',
+    lastUpdated: brandIdentity?.lastUpdated ?? '',
+  }));
   const [newPreferredTerm, setNewPreferredTerm] = useState('');
   const [newForbiddenTerm, setNewForbiddenTerm] = useState('');
 
@@ -108,9 +120,7 @@ export const BrandIdentityView: React.FC<BrandIdentityViewProps> = ({
         </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left 2 Cols: Main Editors */}
-        <div className="lg:col-span-2 space-y-6">
+      <div className="space-y-6">
           {/* 1. Tagline Card */}
           <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
             <div className="flex items-center justify-between pb-2 border-b border-slate-100">
@@ -152,19 +162,6 @@ export const BrandIdentityView: React.FC<BrandIdentityViewProps> = ({
               placeholder="e.g. Warm, polite, respectful Bengali hospitality. Prompt and informative. Uses 'আপনি' and treats customers like valued guests..."
               className="w-full px-3.5 py-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900 text-slate-900 leading-relaxed font-sans"
             />
-
-            {/* Tone Pillars */}
-            <div className="pt-2">
-              <p className="text-xs font-semibold text-slate-800 mb-2">Core Tone Pillars</p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-                {localData.tonePillars.map((pillar, idx) => (
-                  <div key={idx} className="p-3 bg-slate-50 rounded-xl border border-slate-200/80">
-                    <span className="text-xs font-bold text-slate-900 block">{pillar.name}</span>
-                    <span className="text-[11px] text-slate-500 leading-snug">{pillar.description}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* 3. Vocabulary & Lexicon Guidelines */}
@@ -275,61 +272,6 @@ export const BrandIdentityView: React.FC<BrandIdentityViewProps> = ({
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Right Col: Cultural Nuances & RAG Retrieval Preview */}
-        <div className="space-y-6">
-          {/* Greeting Conventions */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
-            <label className="text-xs font-bold text-slate-900 block">
-              Standard Greeting Convention
-            </label>
-            <p className="text-[11px] text-slate-500">
-              Default opening line when customer starts a new conversation.
-            </p>
-            <textarea
-              rows={3}
-              value={localData.greetingConvention}
-              onChange={(e) => setLocalData({ ...localData, greetingConvention: e.target.value })}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900 text-slate-900"
-            />
-          </div>
-
-          {/* Cultural & Linguistic Nuance */}
-          <div className="bg-white rounded-2xl border border-slate-200 p-5 shadow-xs space-y-3">
-            <label className="text-xs font-bold text-slate-900 block">
-              Cultural & Linguistic Nuances
-            </label>
-            <p className="text-[11px] text-slate-500">
-              Context for Bangladeshi market (code-switching, honorifics, seasonal greetings for Eid/Puja).
-            </p>
-            <textarea
-              rows={4}
-              value={localData.culturalNuances}
-              onChange={(e) => setLocalData({ ...localData, culturalNuances: e.target.value })}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900 text-slate-900"
-            />
-          </div>
-
-          {/* RAG Context Injection Preview */}
-          <div className="p-4 bg-purple-50/60 border border-purple-200/80 rounded-2xl space-y-2.5">
-            <div className="flex items-center gap-2 text-xs font-bold text-purple-950">
-              <Info className="w-4 h-4 text-purple-700" />
-              <span>RAG Knowledge Injection Preview</span>
-            </div>
-            <p className="text-[11px] text-purple-900 leading-relaxed">
-              When a customer sends a message, this brand knowledge is aggregated alongside retrieved FAQs and catalogue data and provided to the <strong>Final Generation Layer Model</strong>:
-            </p>
-            <div className="p-3 bg-white/90 border border-purple-200 rounded-xl font-mono text-[10px] text-slate-700 space-y-1 overflow-x-auto">
-              <div className="text-purple-700 font-bold">[BRAND_IDENTITY_CONTEXT]</div>
-              <div>Tagline: "{localData.tagline}"</div>
-              <div>Voice: "{localData.brandVoice.slice(0, 80)}..."</div>
-              <div>Preferred: [{localData.vocabularyGuidelines.preferredTerms.slice(0, 3).join(', ')}]</div>
-              <div>Prohibited: [{localData.vocabularyGuidelines.forbiddenTerms.slice(0, 3).join(', ')}]</div>
-              <div className="text-slate-400 mt-1">→ Passed to Final Generation Layer</div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
   );

@@ -4,10 +4,7 @@ export type AgentConfigTab =
   | 'instructions'
   | 'behavior'
   | 'tools'
-  | 'handover'
-  | 'response_rules'
-  | 'modes'
-  | 'history';
+  | 'modes';
 
 export type PipelineLayerType =
   | 'intent_classification'
@@ -49,25 +46,17 @@ export type AgentModeType =
 
 export interface AgentIdentityConfig {
   agentName: string;
-  businessName: string;
-  welcomeMessage: string;
   supportedLanguages: ('Bangla' | 'English' | 'Banglish')[];
   primaryLanguage: 'Bangla' | 'English' | 'Banglish';
   tone: 'friendly' | 'professional' | 'formal' | 'casual' | 'enthusiastic';
   emojiUsage: 'none' | 'minimal' | 'moderate' | 'expressive';
   messageLength: 'concise' | 'balanced' | 'detailed';
-  returningCustomerGreeting: 'personalized' | 'standard';
-  returningCustomerTemplate: string;
-  discloseAiIdentity: boolean;
-  disclosureStatement: string;
-  brandTerms: string[];
-  forbiddenTerms: string[];
-  signatureSignOff: string;
 }
 
 export interface SystemInstructionsConfig {
   primaryObjective: string;
   businessDescription: string;
+  communicationGuidelines: string;
   supportedTopics: string[];
   prohibitedTopics: string[];
   missingInfoStrategy: 'honest_admission' | 'clarify' | 'escalate_immediately';
@@ -89,6 +78,7 @@ export interface SystemInstructionsConfig {
 export interface ConversationBehaviorConfig {
   immediateGreeting: boolean;
   greetingDelaySeconds: number;
+  welcomeMessage: string;
   proactivelySuggestProducts: boolean;
   productSuggestionTrigger: 'browse_intent' | 'out_of_stock' | 'cross_sell';
   collectContactDetails: boolean;

@@ -1,0 +1,13 @@
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    # Send everything into public/ (front controller)
+    RewriteRule ^$ public/ [L]
+    RewriteRule (.*) public/$1 [L]
+</IfModule>
+
+# Deny direct access to sensitive folders
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(\.env|.*\.sqlite|.*\.log)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>

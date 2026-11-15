@@ -1,35 +1,30 @@
 import React, { useState } from 'react';
 import { PageId } from '../types/navigation';
 import { TimePeriod, TopStatusData } from '../types/overview';
-import {
-  initialStatusData,
-  metricsByPeriod,
-  chartDataByPeriod,
-  commonCustomerQuestions,
-  handoverReasons,
-  failedOrUnresolvedCases,
-  recentActivities,
-} from '../data/overviewMockData';
-import { TopStatusSection } from '../components/overview/TopStatusSection';
+import { useApiData } from '../hooks/useApiData';
+import { api } from '../lib/api';
+import type { TeamMember } from '../types/team';
 import { PerformanceCards } from '../components/overview/PerformanceCards';
 import { ChartsSection } from '../components/overview/ChartsSection';
 import { ActivityAndInsightsSection } from '../components/overview/ActivityAndInsightsSection';
-import { QuickActionsBar } from '../components/overview/QuickActionsBar';
-import { TestAgentModal } from '../components/overview/TestAgentModal';
 import { InviteTeammateModal } from '../components/overview/InviteTeammateModal';
 import { AddKnowledgeModal } from '../components/overview/AddKnowledgeModal';
 import { CheckCircle2, Users, AlertCircle, TrendingUp, Wallet, Plus } from 'lucide-react';
 import { useCurrency } from '../context/CurrencyContext';
 import { PaymentGatewayModal } from '../components/billing/PaymentGatewayModal';
+import { useUrlQueryState } from '../hooks/useUrlQueryState';
 
 interface OverviewPageProps {
   onNavigate?: (page: PageId) => void;
+  onInviteMember: (member: Omit<TeamMember, 'id' | 'joinedAt'>) => void;
 }
 
-export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
-  const [selectedPeriod, setSelectedPeriod] = useState<TimePeriod>('24h');
-  const [statusData, setStatusData] = useState<TopStatusData>(initialStatusData);
-  const [isTestOpen, setIsTestOpen] = useState(false);
+export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate, onInviteMember }) => {
+  const [selectedPeriod, setSelectedPeriod] = useUrlQueryState<TimePeriod>('period', '24h', ['24h', '7d', '30d']);
+  const overviewQ = useApiData<{ status: TopStatusData; metrics: any[]; chart: any[]; commonQuestions: any[]; handoverReasons: any[]; failedOrUnresolved: any[]; activities: any[] }>(`/overview?period=${selectedPeriod}`, [selectedPeriod]);
+  const statusData = overviewQ.data?.status ?? { agentStatus: 'Disconnected', messengerStatus: 'Disconnected', whatsAppStatus: 'Disconnected', knowledgeStatus: 'Indexing', indexedDocsCount: 0, aiProvider: 'Not configured', aiProviderStatus: 'Normal', quotaUsedPercent: 0, unansweredCount: 0 } as TopStatusData;
+  const currentMetrics = overviewQ.data?.metrics ?? [];
+  const currentChartData = overviewQ.data?.chart ?? [];
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isAddKnowledgeOpen, setIsAddKnowledgeOpen] = useState(false);
   const [isRechargeOpen, setIsRechargeOpen] = useState(false);
@@ -39,8 +34,6 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
     activeTenantCurrency,
     getTenantBalance,
     getTenantPricePerMessage,
-    rechargeTenantBalance,
-    deductMessageBalance,
     formatRawAmount,
   } = useCurrency();
 
@@ -53,29 +46,11 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
-  const handleToggleAgentStatus = () => {
-    const nextStatus = statusData.agentStatus === 'Active' ? 'Paused' : 'Active';
-    setStatusData((prev) => ({
-      ...prev,
-      agentStatus: nextStatus,
-    }));
-    showToast(
-      nextStatus === 'Active'
-        ? 'AI Agent resumed and actively answering customers'
-        : 'AI Agent paused. Inbound messages will route to human inbox'
-    );
+  const handleKnowledgeAdded = ({ title, content, type }: { title: string; content: string; type: 'policy' | 'faq' | 'manual' }) => {
+    api.post('/knowledge/sources', { name: title, type: type === 'faq' ? 'faq' : 'manual', content, originDetails: 'Added from overview' })
+      .then(() => { overviewQ.reload(); showToast(`"${title}" saved and queued for indexing`); })
+      .catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not save knowledge source'));
   };
-
-  const handleKnowledgeAdded = (title: string) => {
-    setStatusData((prev) => ({
-      ...prev,
-      indexedDocsCount: prev.indexedDocsCount + 1,
-    }));
-    showToast(`"${title}" added and queued for vector embedding`);
-  };
-
-  const currentMetrics = metricsByPeriod[selectedPeriod];
-  const currentChartData = chartDataByPeriod[selectedPeriod];
 
   return (
     <div className="space-y-6 pb-12">
@@ -91,20 +66,23 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
       <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
         {/* Q1: Is my AI agent working? */}
         <div className="p-4 rounded-2xl bg-white border border-slate-200/80 shadow-xs flex flex-col justify-between">
-          <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>1. Agent Status</span>
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-2 text-slate-400 text-xs font-semibold">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+              <span>1. Agent Status</span>
+            </div>
+            <span className="text-[10px] font-semibold text-slate-500">Workflow setup pending</span>
           </div>
           <div className="my-2">
             <div className="text-sm font-bold text-slate-900">
               {statusData.agentStatus === 'Active' ? 'Active & Healthy' : 'Currently Paused'}
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              Messenger & WhatsApp webhooks operational
+              Agent workflow is not configured yet
             </p>
           </div>
-          <div className="text-[10px] text-emerald-700 font-semibold font-mono">
-            Avg reply 1.4s · 0 outages
+          <div className="mt-2 text-[10px] text-emerald-700 font-semibold font-mono">
+            {statusData.aiProvider} · {statusData.aiProviderStatus}
           </div>
         </div>
 
@@ -116,14 +94,14 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
           </div>
           <div className="my-2">
             <div className="text-sm font-bold text-slate-900">
-              {currentMetrics[0].value} conversations
+              {currentMetrics[0]?.value ?? '—'} conversations
             </div>
             <p className="text-[11px] text-slate-500 mt-0.5">
-              High volume around delivery inquiries
+              {overviewQ.loading ? 'Loading activity…' : 'Recorded in this workspace'}
             </p>
           </div>
           <div className="text-[10px] text-slate-500 font-mono">
-            {currentMetrics[1].value} messages exchanged
+            {currentMetrics[1]?.value ?? '—'} messages exchanged
           </div>
         </div>
 
@@ -181,47 +159,11 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-[10px] text-slate-400 font-mono pt-1.5 border-t border-slate-100">
-            <span>Capacity: ~{estimatedRemainingMessages.toLocaleString()} msgs</span>
-            <button
-              type="button"
-              onClick={() => {
-                const res = deductMessageBalance();
-                if (res.success) {
-                  showToast(
-                    `Simulated AI reply: Deducted ${formatRawAmount(res.deducted, activeTenantCurrency.code)} (New bal: ${formatRawAmount(res.newBalance, activeTenantCurrency.code)})`
-                  );
-                } else {
-                  showToast('Insufficient wallet balance! Please recharge.');
-                }
-              }}
-              title="Test real-time deduction of 1 AI reply message"
-              className="text-slate-600 hover:text-slate-900 hover:underline font-sans font-medium"
-            >
-              Test Deduct
-            </button>
+          <div className="text-[10px] text-slate-400 font-mono pt-1.5 border-t border-slate-100">
+            Capacity: ~{estimatedRemainingMessages.toLocaleString()} msgs
           </div>
         </div>
       </section>
-
-      {/* Top Status Section */}
-      <TopStatusSection
-        status={statusData}
-        onToggleAgentStatus={handleToggleAgentStatus}
-        onOpenTest={() => setIsTestOpen(true)}
-      />
-
-      {/* Quick Actions Bar */}
-      <QuickActionsBar
-        isAgentActive={statusData.agentStatus === 'Active'}
-        unansweredCount={statusData.unansweredCount}
-        onToggleAgentStatus={handleToggleAgentStatus}
-        onOpenUnanswered={() => onNavigate?.('inbox')}
-        onTestAgent={() => setIsTestOpen(true)}
-        onAddKnowledge={() => setIsAddKnowledgeOpen(true)}
-        onConnectChannel={() => onNavigate?.('channels')}
-        onInviteTeammate={() => setIsInviteOpen(true)}
-      />
 
       {/* Key Performance Cards */}
       <PerformanceCards
@@ -239,23 +181,19 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
 
       {/* Activity & Insights: Common Questions, Handovers, Unresolved Cases, Timeline */}
       <ActivityAndInsightsSection
-        questions={commonCustomerQuestions}
-        handovers={handoverReasons}
-        unresolvedCases={failedOrUnresolvedCases}
-        activities={recentActivities}
+        questions={overviewQ.data?.commonQuestions ?? []}
+        handovers={overviewQ.data?.handoverReasons ?? []}
+        unresolvedCases={overviewQ.data?.failedOrUnresolved ?? []}
+        activities={overviewQ.data?.activities ?? []}
         onOpenInbox={() => onNavigate?.('inbox')}
         onOpenKnowledge={() => setIsAddKnowledgeOpen(true)}
       />
 
       {/* Modals */}
-      <TestAgentModal
-        isOpen={isTestOpen}
-        onClose={() => setIsTestOpen(false)}
-      />
-
       <InviteTeammateModal
         isOpen={isInviteOpen}
         onClose={() => setIsInviteOpen(false)}
+        onInvite={onInviteMember}
       />
 
       <AddKnowledgeModal
@@ -267,11 +205,9 @@ export const OverviewPage: React.FC<OverviewPageProps> = ({ onNavigate }) => {
       <PaymentGatewayModal
         isOpen={isRechargeOpen}
         onClose={() => setIsRechargeOpen(false)}
-        onConfirmRecharge={(amount, gateway, trxId) => {
-          showToast(
-            `Wallet successfully recharged with ${formatRawAmount(amount, activeTenantCurrency.code)} via ${gateway.toUpperCase()} (Trx: ${trxId})!`
-          );
-        }}
+        currency={activeTenantCurrency}
+        currentBalance={currentBalance}
+        pricePerMessage={pricePerMsg}
       />
     </div>
   );

@@ -111,6 +111,23 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
             </select>
           </div>
         </div>
+
+        <div>
+          <div className="flex items-center justify-between mb-1.5">
+            <label className="block text-xs font-medium text-slate-700">
+              First-Time Welcome Greeting Message
+            </label>
+            <span className="text-[11px] text-slate-400 font-mono">
+              Sent upon first user message
+            </span>
+          </div>
+          <textarea
+            rows={3}
+            value={config.welcomeMessage}
+            onChange={(e) => handleFieldChange('welcomeMessage', e.target.value)}
+            className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-xs font-sans text-slate-900 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          />
+        </div>
       </div>
 
       {/* Product Recommendations & Commercial Suggestions */}
@@ -282,6 +299,9 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
           <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
             <BellRing className="w-4 h-4 text-amber-600 shrink-0" />
             <span>Automated Follow-Up & Inactivity Timers</span>
+            <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 border border-slate-200 text-[10px] font-semibold">
+              Coming Soon
+            </span>
           </h3>
           <p className="text-xs text-slate-500 mt-0.5">
             Re-engage inactive threads while respecting WhatsApp and Meta 24-hour messaging windows.
@@ -311,8 +331,9 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
             </div>
             <button
               type="button"
+              disabled
               onClick={() => handleToggle('autoFollowUpAfterUnanswered')}
-              className={`w-12 h-6 rounded-full transition-colors relative shrink-0 ${
+              className={`w-12 h-6 rounded-full transition-colors relative shrink-0 opacity-50 cursor-not-allowed ${
                 config.autoFollowUpAfterUnanswered ? 'bg-slate-900' : 'bg-slate-300'
               }`}
             >
@@ -331,9 +352,10 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
                   Follow-Up Delay
                 </label>
                 <select
+                  disabled
                   value={config.followUpDelayMinutes}
                   onChange={(e) => handleFieldChange('followUpDelayMinutes', Number(e.target.value))}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 text-slate-900"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-500 opacity-60 cursor-not-allowed"
                 >
                   <option value={15}>15 Minutes</option>
                   <option value={30}>30 Minutes</option>
@@ -348,9 +370,10 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
                 </label>
                 <input
                   type="text"
+                  disabled
                   value={config.followUpMessage}
                   onChange={(e) => handleFieldChange('followUpMessage', e.target.value)}
-                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 text-slate-900"
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-500 opacity-60 cursor-not-allowed"
                 />
               </div>
             </div>
@@ -363,9 +386,10 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
                 Session Inactivity Timeout
               </label>
               <select
+                disabled
                 value={config.inactivityTimeoutMinutes}
                 onChange={(e) => handleFieldChange('inactivityTimeoutMinutes', Number(e.target.value))}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 text-slate-900"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-500 opacity-60 cursor-not-allowed"
               >
                 <option value={15}>15 Minutes</option>
                 <option value={30}>30 Minutes (Recommended)</option>
@@ -379,9 +403,10 @@ export const ConversationBehaviorView: React.FC<ConversationBehaviorViewProps> =
                 Action Upon Inactivity
               </label>
               <select
+                disabled
                 value={config.inactivityAction}
                 onChange={(e) => handleFieldChange('inactivityAction', e.target.value)}
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 text-slate-900"
+                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl text-slate-500 opacity-60 cursor-not-allowed"
               >
                 <option value="send_nudge">Send gentle nudge then resolve</option>
                 <option value="close_session">Quietly mark resolved</option>

@@ -24,6 +24,8 @@ interface NotificationsEscalationsViewProps {
   rules: EscalationRule[];
   preferences: UserNotificationPreference[];
   notifications: SystemNotificationItem[];
+  quietHours:{enabled:boolean;start:string;end:string};
+  onUpdateQuietHours:(value:{quietHoursEnabled?:boolean;quietHoursStart?:string;quietHoursEnd?:string})=>void;
   onToggleRule: (ruleId: string) => void;
   onUpdatePreference: (categoryIndex: number, channel: 'inApp' | 'email' | 'smsWhatsapp') => void;
   onMarkNotificationRead: (notifId: string) => void;
@@ -33,14 +35,13 @@ export const NotificationsEscalationsView: React.FC<NotificationsEscalationsView
   rules,
   preferences,
   notifications,
+  quietHours,
+  onUpdateQuietHours,
   onToggleRule,
   onUpdatePreference,
   onMarkNotificationRead,
 }) => {
   const [activeTab, setActiveTab] = useState<'escalation_rules' | 'preferences' | 'feed'>('escalation_rules');
-  const [quietHoursStart, setQuietHoursStart] = useState('23:00');
-  const [quietHoursEnd, setQuietHoursEnd] = useState('07:00');
-  const [quietHoursEnabled, setQuietHoursEnabled] = useState(true);
 
   return (
     <div className="space-y-6">
@@ -239,22 +240,22 @@ export const NotificationsEscalationsView: React.FC<NotificationsEscalationsView
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  checked={quietHoursEnabled}
-                  onChange={(e) => setQuietHoursEnabled(e.target.checked)}
+                  checked={quietHours.enabled}
+                  onChange={(e) => onUpdateQuietHours({quietHoursEnabled:e.target.checked})}
                   className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
                 />
                 <span className="text-xs font-semibold text-slate-800">Enable Quiet Hours</span>
               </label>
             </div>
 
-            {quietHoursEnabled && (
+            {quietHours.enabled && (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
                 <div>
                   <label className="block font-semibold text-slate-700 mb-1">Quiet Hours Start</label>
                   <input
                     type="time"
-                    value={quietHoursStart}
-                    onChange={(e) => setQuietHoursStart(e.target.value)}
+                    value={quietHours.start}
+                    onChange={(e) => onUpdateQuietHours({quietHoursStart:e.target.value})}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900"
                   />
                 </div>
@@ -262,8 +263,8 @@ export const NotificationsEscalationsView: React.FC<NotificationsEscalationsView
                   <label className="block font-semibold text-slate-700 mb-1">Quiet Hours End</label>
                   <input
                     type="time"
-                    value={quietHoursEnd}
-                    onChange={(e) => setQuietHoursEnd(e.target.value)}
+                    value={quietHours.end}
+                    onChange={(e) => onUpdateQuietHours({quietHoursEnd:e.target.value})}
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900"
                   />
                 </div>

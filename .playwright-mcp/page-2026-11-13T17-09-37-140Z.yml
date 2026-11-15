@@ -1,0 +1,451 @@
+- generic [ref=f2e3]:
+  - banner [ref=f2e4]:
+    - generic [ref=f2e5]:
+      - generic [ref=f2e6]: S
+      - generic [ref=f2e7]:
+        - generic [ref=f2e8]: Support API
+        - generic [ref=f2e9]: Platform Admin
+    - button "Open navigation" [ref=f2e618]
+  - main [ref=f2e13]:
+    - generic [ref=f2e621]:
+      - generic [ref=f2e624]:
+        - button "Tenants Directory 5" [ref=f2e625] [cursor=pointer]:
+          - generic [ref=f2e630]: Tenants Directory
+          - generic [ref=f2e631]: "5"
+        - button "Currency System & Rates 6 Currencies" [ref=f2e632] [cursor=pointer]:
+          - generic [ref=f2e638]: Currency System & Rates
+          - generic [ref=f2e639]: 6 Currencies
+        - button "Global Pipeline Layers 5 Layers" [ref=f2e640] [cursor=pointer]:
+          - generic [ref=f2e645]: Global Pipeline Layers
+          - generic [ref=f2e646]: 5 Layers
+        - button "AI Provider Registry KMS" [ref=f2e647] [cursor=pointer]:
+          - generic [ref=f2e651]: AI Provider Registry
+          - generic [ref=f2e652]: KMS
+        - button "Usage & Cost Control" [ref=f2e653] [cursor=pointer]
+        - button "Queues & BullMQ 3" [ref=f2e657] [cursor=pointer]:
+          - generic [ref=f2e662]: Queues & BullMQ
+          - generic [ref=f2e663]: "3"
+        - button "System Health & SLA 99.98%" [ref=f2e664] [cursor=pointer]:
+          - generic [ref=f2e667]: System Health & SLA
+          - generic [ref=f2e668]: 99.98%
+        - button "Security & Canaries" [ref=f2e669] [cursor=pointer]
+      - generic [ref=f2e935]:
+        - generic [ref=f2e936]:
+          - generic [ref=f2e944]:
+            - generic [ref=f2e945]:
+              - heading "Multi-Currency & Exchange Rate System" [level=3] [ref=f2e946]
+              - generic [ref=f2e947]: 6 Currencies Configured
+            - paragraph [ref=f2e948]: Add custom currencies with personalized symbols, display positions, and USD exchange rates. Assign operating currencies per tenant.
+          - button "Add Custom Currency" [active] [ref=f2e950]
+        - generic [ref=f2e952]:
+          - generic [ref=f2e953]:
+            - heading "Platform Admin Default Currency" [level=4] [ref=f2e957]
+            - paragraph [ref=f2e958]: Select which currency will be used to display platform-wide metrics, provider costs, and administrative totals.
+          - generic [ref=f2e960]:
+            - button "৳ BDT" [ref=f2e961]:
+              - generic [ref=f2e962]: ৳
+              - generic [ref=f2e963]: BDT
+            - button "$ USD" [ref=f2e964]:
+              - generic [ref=f2e965]: $
+              - generic [ref=f2e966]: USD
+            - button "€ EUR" [ref=f2e969]:
+              - generic [ref=f2e970]: €
+              - generic [ref=f2e971]: EUR
+            - button "£ GBP" [ref=f2e972]:
+              - generic [ref=f2e973]: £
+              - generic [ref=f2e974]: GBP
+            - button "د.إ AED" [ref=f2e975]:
+              - generic [ref=f2e976]: د.إ
+              - generic [ref=f2e977]: AED
+            - button "₹ INR" [ref=f2e978]:
+              - generic [ref=f2e979]: ₹
+              - generic [ref=f2e980]: INR
+        - generic [ref=f2e981]:
+          - generic [ref=f2e982]:
+            - heading "Configured Platform Currencies" [level=4] [ref=f2e983]
+            - generic [ref=f2e987]: "Base benchmark: 1.00 USD"
+          - generic [ref=f2e988]:
+            - generic [ref=f2e989]:
+              - generic [ref=f2e990]:
+                - generic [ref=f2e992]:
+                  - generic [ref=f2e993]: ৳
+                  - generic [ref=f2e994]:
+                    - generic [ref=f2e995]:
+                      - heading "Bangladeshi Taka" [level=5] [ref=f2e996]
+                      - generic [ref=f2e997]: (BDT)
+                    - paragraph [ref=f2e998]: National currency of Bangladesh (Default for local e-commerce tenants)
+                - generic [ref=f2e999]:
+                  - generic [ref=f2e1000]:
+                    - generic [ref=f2e1001]: "Exchange Rate:"
+                    - generic [ref=f2e1002]: 1 USD = 124.774 BDT
+                  - generic [ref=f2e1003]:
+                    - generic [ref=f2e1004]: "Symbol Placement:"
+                    - generic [ref=f2e1005]: Before amount (with space)
+                  - generic [ref=f2e1006]:
+                    - generic [ref=f2e1007]: "Decimal Precision:"
+                    - generic [ref=f2e1008]: 0 (Integer only)
+                  - generic [ref=f2e1009]:
+                    - generic [ref=f2e1010]: "Live Format ($25 USD):"
+                    - generic [ref=f2e1011]: ৳ 3,119
+              - generic [ref=f2e1012]:
+                - button "Make Default" [ref=f2e1013]
+                - generic [ref=f2e1016]:
+                  - button "Edit Currency Rules" [ref=f2e1017]
+                  - button "Delete Currency" [ref=f2e1020]
+            - generic [ref=f2e1024]:
+              - generic [ref=f2e1025]:
+                - generic [ref=f2e1026]:
+                  - generic [ref=f2e1027]:
+                    - generic [ref=f2e1028]: $
+                    - generic [ref=f2e1029]:
+                      - generic [ref=f2e1030]:
+                        - heading "US Dollar" [level=5] [ref=f2e1031]
+                        - generic [ref=f2e1032]: (USD)
+                      - paragraph [ref=f2e1033]: Global benchmark currency for AI API tokens and infrastructure billing
+                  - generic [ref=f2e1034]: Default
+                - generic [ref=f2e1038]:
+                  - generic [ref=f2e1039]:
+                    - generic [ref=f2e1040]: "Exchange Rate:"
+                    - generic [ref=f2e1041]: 1 USD = 1.00 USD
+                  - generic [ref=f2e1042]:
+                    - generic [ref=f2e1043]: "Symbol Placement:"
+                    - generic [ref=f2e1044]: Before amount (no space)
+                  - generic [ref=f2e1045]:
+                    - generic [ref=f2e1046]: "Decimal Precision:"
+                    - generic [ref=f2e1047]: 2 decimals
+                  - generic [ref=f2e1048]:
+                    - generic [ref=f2e1049]: "Live Format ($25 USD):"
+                    - generic [ref=f2e1050]: $25.00
+              - generic [ref=f2e1051]:
+                - generic [ref=f2e1052]: Platform Default
+                - button "Edit Currency Rules" [ref=f2e1057]
+            - generic [ref=f2e1060]:
+              - generic [ref=f2e1061]:
+                - generic [ref=f2e1063]:
+                  - generic [ref=f2e1064]: €
+                  - generic [ref=f2e1065]:
+                    - generic [ref=f2e1066]:
+                      - heading "Euro" [level=5] [ref=f2e1067]
+                      - generic [ref=f2e1068]: (EUR)
+                    - paragraph [ref=f2e1069]: European Union single market currency
+                - generic [ref=f2e1070]:
+                  - generic [ref=f2e1071]:
+                    - generic [ref=f2e1072]: "Exchange Rate:"
+                    - generic [ref=f2e1073]: 1 USD = 0.903 EUR
+                  - generic [ref=f2e1074]:
+                    - generic [ref=f2e1075]: "Symbol Placement:"
+                    - generic [ref=f2e1076]: After amount (with space)
+                  - generic [ref=f2e1077]:
+                    - generic [ref=f2e1078]: "Decimal Precision:"
+                    - generic [ref=f2e1079]: 2 decimals
+                  - generic [ref=f2e1080]:
+                    - generic [ref=f2e1081]: "Live Format ($25 USD):"
+                    - generic [ref=f2e1082]: 22,59 €
+              - generic [ref=f2e1083]:
+                - button "Make Default" [ref=f2e1084]
+                - generic [ref=f2e1087]:
+                  - button "Edit Currency Rules" [ref=f2e1088]
+                  - button "Delete Currency" [ref=f2e1091]
+            - generic [ref=f2e1095]:
+              - generic [ref=f2e1096]:
+                - generic [ref=f2e1098]:
+                  - generic [ref=f2e1099]: £
+                  - generic [ref=f2e1100]:
+                    - generic [ref=f2e1101]:
+                      - heading "British Pound" [level=5] [ref=f2e1102]
+                      - generic [ref=f2e1103]: (GBP)
+                    - paragraph [ref=f2e1104]: United Kingdom pound sterling
+                - generic [ref=f2e1105]:
+                  - generic [ref=f2e1106]:
+                    - generic [ref=f2e1107]: "Exchange Rate:"
+                    - generic [ref=f2e1108]: 1 USD = 0.755 GBP
+                  - generic [ref=f2e1109]:
+                    - generic [ref=f2e1110]: "Symbol Placement:"
+                    - generic [ref=f2e1111]: Before amount (no space)
+                  - generic [ref=f2e1112]:
+                    - generic [ref=f2e1113]: "Decimal Precision:"
+                    - generic [ref=f2e1114]: 2 decimals
+                  - generic [ref=f2e1115]:
+                    - generic [ref=f2e1116]: "Live Format ($25 USD):"
+                    - generic [ref=f2e1117]: £18.88
+              - generic [ref=f2e1118]:
+                - button "Make Default" [ref=f2e1119]
+                - generic [ref=f2e1122]:
+                  - button "Edit Currency Rules" [ref=f2e1123]
+                  - button "Delete Currency" [ref=f2e1126]
+            - generic [ref=f2e1130]:
+              - generic [ref=f2e1131]:
+                - generic [ref=f2e1133]:
+                  - generic [ref=f2e1134]: د.إ
+                  - generic [ref=f2e1135]:
+                    - generic [ref=f2e1136]:
+                      - heading "UAE Dirham" [level=5] [ref=f2e1137]
+                      - generic [ref=f2e1138]: (AED)
+                    - paragraph [ref=f2e1139]: United Arab Emirates dirham for GCC regional stores
+                - generic [ref=f2e1140]:
+                  - generic [ref=f2e1141]:
+                    - generic [ref=f2e1142]: "Exchange Rate:"
+                    - generic [ref=f2e1143]: 1 USD = 3.673 AED
+                  - generic [ref=f2e1144]:
+                    - generic [ref=f2e1145]: "Symbol Placement:"
+                    - generic [ref=f2e1146]: Before amount (with space)
+                  - generic [ref=f2e1147]:
+                    - generic [ref=f2e1148]: "Decimal Precision:"
+                    - generic [ref=f2e1149]: 2 decimals
+                  - generic [ref=f2e1150]:
+                    - generic [ref=f2e1151]: "Live Format ($25 USD):"
+                    - generic [ref=f2e1152]: د.إ 91.81
+              - generic [ref=f2e1153]:
+                - button "Make Default" [ref=f2e1154]
+                - generic [ref=f2e1157]:
+                  - button "Edit Currency Rules" [ref=f2e1158]
+                  - button "Delete Currency" [ref=f2e1161]
+            - generic [ref=f2e1165]:
+              - generic [ref=f2e1166]:
+                - generic [ref=f2e1168]:
+                  - generic [ref=f2e1169]: ₹
+                  - generic [ref=f2e1170]:
+                    - generic [ref=f2e1171]:
+                      - heading "Indian Rupee" [level=5] [ref=f2e1172]
+                      - generic [ref=f2e1173]: (INR)
+                    - paragraph [ref=f2e1174]: Indian Rupee cross-border trade
+                - generic [ref=f2e1175]:
+                  - generic [ref=f2e1176]:
+                    - generic [ref=f2e1177]: "Exchange Rate:"
+                    - generic [ref=f2e1178]: 1 USD = 94.086 INR
+                  - generic [ref=f2e1179]:
+                    - generic [ref=f2e1180]: "Symbol Placement:"
+                    - generic [ref=f2e1181]: Before amount (with space)
+                  - generic [ref=f2e1182]:
+                    - generic [ref=f2e1183]: "Decimal Precision:"
+                    - generic [ref=f2e1184]: 2 decimals
+                  - generic [ref=f2e1185]:
+                    - generic [ref=f2e1186]: "Live Format ($25 USD):"
+                    - generic [ref=f2e1187]: ₹ 2,352.15
+              - generic [ref=f2e1188]:
+                - button "Make Default" [ref=f2e1189]
+                - generic [ref=f2e1192]:
+                  - button "Edit Currency Rules" [ref=f2e1193]
+                  - button "Delete Currency" [ref=f2e1196]
+        - generic [ref=f2e1200]:
+          - generic [ref=f2e1201]:
+            - generic [ref=f2e1202]:
+              - heading "Live Multi-Currency Rate Converter" [level=4] [ref=f2e1203]
+              - paragraph [ref=f2e1206]: Test how custom amounts convert and format across all configured currencies simultaneously.
+            - generic [ref=f2e1207]:
+              - generic [ref=f2e1208]: "Input Base (USD):"
+              - generic [ref=f2e1209]:
+                - generic [ref=f2e1210]: $
+                - spinbutton [ref=f2e1211]: "100"
+          - generic [ref=f2e1212]:
+            - generic [ref=f2e1213]:
+              - generic [ref=f2e1214]:
+                - generic [ref=f2e1215]: BDT
+                - generic [ref=f2e1216]: ৳
+              - generic "৳ 12,477" [ref=f2e1217]
+              - generic [ref=f2e1218]: "Rate: 124.773951"
+            - generic [ref=f2e1219]:
+              - generic [ref=f2e1220]:
+                - generic [ref=f2e1221]: USD
+                - generic [ref=f2e1222]: $
+              - generic "$100.00" [ref=f2e1223]
+              - generic [ref=f2e1224]: "Rate: 1"
+            - generic [ref=f2e1225]:
+              - generic [ref=f2e1226]:
+                - generic [ref=f2e1227]: EUR
+                - generic [ref=f2e1228]: €
+              - generic "90,35 €" [ref=f2e1229]
+              - generic [ref=f2e1230]: "Rate: 0.903491"
+            - generic [ref=f2e1231]:
+              - generic [ref=f2e1232]:
+                - generic [ref=f2e1233]: GBP
+                - generic [ref=f2e1234]: £
+              - generic "£75.51" [ref=f2e1235]
+              - generic [ref=f2e1236]: "Rate: 0.755149"
+            - generic [ref=f2e1237]:
+              - generic [ref=f2e1238]:
+                - generic [ref=f2e1239]: AED
+                - generic [ref=f2e1240]: د.إ
+              - generic "د.إ 367.25" [ref=f2e1241]
+              - generic [ref=f2e1242]: "Rate: 3.6725"
+            - generic [ref=f2e1243]:
+              - generic [ref=f2e1244]:
+                - generic [ref=f2e1245]: INR
+                - generic [ref=f2e1246]: ₹
+              - generic "₹ 9,408.61" [ref=f2e1247]
+              - generic [ref=f2e1248]: "Rate: 94.086126"
+        - generic [ref=f2e1249]:
+          - generic [ref=f2e1250]:
+            - generic [ref=f2e1251]:
+              - heading "Tenant Operating Currency Assignments" [level=4] [ref=f2e1252]
+              - paragraph [ref=f2e1257]: Each business tenant operates in their selected currency. All client-facing analytics, billing, and metrics format automatically.
+            - generic [ref=f2e1258]: 5 Registered Tenants
+          - table [ref=f2e1260]:
+            - rowgroup [ref=f2e1261]:
+              - row [ref=f2e1262]:
+                - columnheader "Tenant Business" [ref=f2e1263]
+                - columnheader "Owner Contact" [ref=f2e1264]
+                - columnheader "Channels" [ref=f2e1265]
+                - columnheader "Monthly Spend" [ref=f2e1266]
+                - columnheader "Assigned Operating Currency" [ref=f2e1267]
+            - rowgroup [ref=f2e1268]:
+              - row [ref=f2e1269]:
+                - cell "Bengal Loom & Crafts ten_loom_01" [ref=f2e1270]:
+                  - generic [ref=f2e1271]: Bengal Loom & Crafts
+                  - generic [ref=f2e1272]: ten_loom_01
+                - cell "Sajedur Rahman +880 1712-984210" [ref=f2e1273]:
+                  - generic [ref=f2e1274]: Sajedur Rahman
+                  - generic [ref=f2e1275]: +880 1712-984210
+                - cell "1 FB / 2 WA" [ref=f2e1276]
+                - cell "৳ 4,794 ($38.42 USD)" [ref=f2e1278]:
+                  - generic [ref=f2e1279]: ৳ 4,794
+                  - generic [ref=f2e1280]: ($38.42 USD)
+                - cell [ref=f2e1281]:
+                  - combobox [ref=f2e1283]:
+                    - option "BDT (৳) — Bangladeshi Taka" [selected]
+                    - option "USD ($) — US Dollar"
+                    - option "EUR (€) — Euro"
+                    - option "GBP (£) — British Pound"
+                    - option "AED (د.إ) — UAE Dirham"
+                    - option "INR (₹) — Indian Rupee"
+              - row [ref=f2e1284]:
+                - cell "Gadget Express BD ten_gadget_02" [ref=f2e1285]:
+                  - generic [ref=f2e1286]: Gadget Express BD
+                  - generic [ref=f2e1287]: ten_gadget_02
+                - cell "Mushfiqur Rahman +880 1819-204918" [ref=f2e1288]:
+                  - generic [ref=f2e1289]: Mushfiqur Rahman
+                  - generic [ref=f2e1290]: +880 1819-204918
+                - cell "3 FB / 4 WA" [ref=f2e1291]
+                - cell "৳ 14,075 ($112.80 USD)" [ref=f2e1293]:
+                  - generic [ref=f2e1294]: ৳ 14,075
+                  - generic [ref=f2e1295]: ($112.80 USD)
+                - cell [ref=f2e1296]:
+                  - combobox [ref=f2e1298]:
+                    - option "BDT (৳) — Bangladeshi Taka" [selected]
+                    - option "USD ($) — US Dollar"
+                    - option "EUR (€) — Euro"
+                    - option "GBP (£) — British Pound"
+                    - option "AED (د.إ) — UAE Dirham"
+                    - option "INR (₹) — Indian Rupee"
+              - row [ref=f2e1299]:
+                - cell "Aarong Handcrafts Reseller ten_cloud_03" [ref=f2e1300]:
+                  - generic [ref=f2e1301]: Aarong Handcrafts Reseller
+                  - generic [ref=f2e1302]: ten_cloud_03
+                - cell "Samira Huq +880 1911-382910" [ref=f2e1303]:
+                  - generic [ref=f2e1304]: Samira Huq
+                  - generic [ref=f2e1305]: +880 1911-382910
+                - cell "1 FB / 0 WA" [ref=f2e1306]
+                - cell "৳ 1,772 ($14.20 USD)" [ref=f2e1308]:
+                  - generic [ref=f2e1309]: ৳ 1,772
+                  - generic [ref=f2e1310]: ($14.20 USD)
+                - cell [ref=f2e1311]:
+                  - combobox [ref=f2e1313]:
+                    - option "BDT (৳) — Bangladeshi Taka" [selected]
+                    - option "USD ($) — US Dollar"
+                    - option "EUR (€) — Euro"
+                    - option "GBP (£) — British Pound"
+                    - option "AED (د.إ) — UAE Dirham"
+                    - option "INR (₹) — Indian Rupee"
+              - row [ref=f2e1314]:
+                - cell "Dhaka Pharma & Care ten_med_04" [ref=f2e1315]:
+                  - generic [ref=f2e1316]: Dhaka Pharma & Care
+                  - generic [ref=f2e1317]: ten_med_04
+                - cell "Dr. Kazi Mahfuz +880 1711-002941" [ref=f2e1318]:
+                  - generic [ref=f2e1319]: Dr. Kazi Mahfuz
+                  - generic [ref=f2e1320]: +880 1711-002941
+                - cell "4 FB / 6 WA" [ref=f2e1321]
+                - cell "৳ 30,644 ($245.60 USD)" [ref=f2e1323]:
+                  - generic [ref=f2e1324]: ৳ 30,644
+                  - generic [ref=f2e1325]: ($245.60 USD)
+                - cell [ref=f2e1326]:
+                  - combobox [ref=f2e1328]:
+                    - option "BDT (৳) — Bangladeshi Taka" [selected]
+                    - option "USD ($) — US Dollar"
+                    - option "EUR (€) — Euro"
+                    - option "GBP (£) — British Pound"
+                    - option "AED (د.إ) — UAE Dirham"
+                    - option "INR (₹) — Indian Rupee"
+              - row [ref=f2e1329]:
+                - cell "QuickBite Cloud Kitchens ten_quick_05" [ref=f2e1330]:
+                  - generic [ref=f2e1331]: QuickBite Cloud Kitchens
+                  - generic [ref=f2e1332]: ten_quick_05
+                - cell "Rashedul Karim +880 1612-491029" [ref=f2e1333]:
+                  - generic [ref=f2e1334]: Rashedul Karim
+                  - generic [ref=f2e1335]: +880 1612-491029
+                - cell "2 FB / 1 WA" [ref=f2e1336]
+                - cell "$0.00 ($0.00 USD)" [ref=f2e1338]:
+                  - generic [ref=f2e1339]: $0.00
+                  - generic [ref=f2e1340]: ($0.00 USD)
+                - cell [ref=f2e1341]:
+                  - combobox [ref=f2e1343]:
+                    - option "BDT (৳) — Bangladeshi Taka"
+                    - option "USD ($) — US Dollar" [selected]
+                    - option "EUR (€) — Euro"
+                    - option "GBP (£) — British Pound"
+                    - option "AED (د.إ) — UAE Dirham"
+                    - option "INR (₹) — Indian Rupee"
+        - generic [ref=f2e1345]:
+          - generic [ref=f2e1346]:
+            - generic [ref=f2e1354]:
+              - heading "Add Custom Currency" [level=3] [ref=f2e1355]
+              - paragraph [ref=f2e1356]: Configure symbol position, exchange rate, and decimal precision.
+            - button [ref=f2e1357]
+          - generic [ref=f2e1361]:
+            - generic [ref=f2e1362]:
+              - generic [ref=f2e1363]:
+                - generic [ref=f2e1364]: Currency Code *
+                - textbox "e.g. BDT, CAD" [ref=f2e1365]
+              - generic [ref=f2e1366]:
+                - generic [ref=f2e1367]: Currency Name *
+                - textbox "e.g. Bangladeshi Taka, Euro" [ref=f2e1368]
+            - generic [ref=f2e1369]:
+              - generic [ref=f2e1370]:
+                - generic [ref=f2e1371]: Symbol *
+                - textbox "e.g. ৳, $, €, £, د.إ" [ref=f2e1372]
+              - generic [ref=f2e1373]:
+                - generic [ref=f2e1374]: Live Rate from 1.00 USD
+                - textbox "No live rate for this code" [ref=f2e1375]
+                - paragraph [ref=f2e1376]: Fetched by currency code. Rates refresh automatically.
+            - generic [ref=f2e1377]:
+              - generic [ref=f2e1378]:
+                - generic [ref=f2e1379]: Symbol Display Placement
+                - generic [ref=f2e1380]:
+                  - button "Before Amount $1,250" [ref=f2e1381]:
+                    - generic [ref=f2e1382]: Before Amount
+                    - generic [ref=f2e1383]: $1,250
+                  - button "After Amount 1,250 €" [ref=f2e1384]:
+                    - generic [ref=f2e1385]: After Amount
+                    - generic [ref=f2e1386]: 1,250 €
+              - generic [ref=f2e1387] [cursor=pointer]:
+                - checkbox "Include space between symbol and amount (e.g. ৳ 1,200)" [ref=f2e1388]
+                - generic [ref=f2e1389]: Include space between symbol and amount (e.g. ৳ 1,200)
+            - generic [ref=f2e1390]:
+              - generic [ref=f2e1391]:
+                - generic [ref=f2e1392]: Decimal Places
+                - combobox [ref=f2e1393]:
+                  - option "0 (e.g. ৳ 1,200)"
+                  - option "2 (e.g. $ 1,200.50)" [selected]
+                  - option "3 (e.g. 1.200,500)"
+                  - option "4 (e.g. 1.200,5000)"
+              - generic [ref=f2e1394]:
+                - generic [ref=f2e1395]: Thousands Sep
+                - combobox [ref=f2e1396]:
+                  - option "Comma (,)" [selected]
+                  - option "Period (.)"
+                  - option "Space ( )"
+              - generic [ref=f2e1397]:
+                - generic [ref=f2e1398]: Decimal Sep
+                - combobox [ref=f2e1399]:
+                  - option "Period (.)" [selected]
+                  - option "Comma (,)"
+            - generic [ref=f2e1400] [cursor=pointer]:
+              - checkbox "Set as Platform Admin Default Currency" [ref=f2e1401]
+              - generic [ref=f2e1402]: Set as Platform Admin Default Currency
+            - generic [ref=f2e1403]:
+              - generic [ref=f2e1404]:
+                - generic [ref=f2e1405]: Live Formatted Preview
+                - text: Live rate unavailable
+              - generic [ref=f2e1406]: "Rate: Unavailable"
+            - generic [ref=f2e1407]:
+              - button "Cancel" [ref=f2e1408]
+              - button "Save Currency" [ref=f2e1409]

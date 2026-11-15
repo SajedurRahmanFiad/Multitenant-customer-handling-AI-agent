@@ -1,22 +1,13 @@
 import React, { useState } from 'react';
 import { CustomCurrency, formatCurrencyAmount } from '../../types/currency';
-import { useCurrency } from '../../context/CurrencyContext';
 import {
   CreditCard,
   Wallet,
   Smartphone,
-  CheckCircle2,
-  AlertCircle,
   X,
   ArrowRight,
-  ShieldCheck,
   Lock,
-  Sparkles,
-  Zap,
   Building2,
-  RefreshCw,
-  Receipt,
-  Check,
 } from 'lucide-react';
 
 export type PaymentGatewayType = 'bkash' | 'nagad' | 'card' | 'bank';
@@ -27,7 +18,6 @@ interface PaymentGatewayModalProps {
   currency?: CustomCurrency;
   currentBalance?: number;
   pricePerMessage?: number;
-  onConfirmRecharge?: (amount: number, gateway: PaymentGatewayType, trxId: string) => void;
   tenantName?: string;
 }
 
@@ -37,16 +27,12 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   currency: propCurrency,
   currentBalance: propBalance,
   pricePerMessage: propPrice,
-  onConfirmRecharge,
   tenantName = 'Active Workspace',
 }) => {
-  const currencyCtx = useCurrency();
-  const currency = propCurrency || currencyCtx.activeTenantCurrency;
-  const currentBalance = propBalance !== undefined ? propBalance : currencyCtx.getTenantBalance();
-  const pricePerMessage = propPrice !== undefined ? propPrice : currencyCtx.getTenantPricePerMessage();
-  // Navigation within payment flow
-  // step: 'specify_amount' -> 'gateway_checkout' -> 'success_receipt'
-  const [step, setStep] = useState<'specify_amount' | 'gateway_checkout' | 'success_receipt'>('specify_amount');
+  const currency = propCurrency || { code: 'USD', symbol: '$', decimalPlaces: 2 } as CustomCurrency;
+  const currentBalance = propBalance ?? 0;
+  const pricePerMessage = propPrice ?? 0;
+  const [step, setStep] = useState<'specify_amount' | 'gateway_checkout'>('specify_amount');
 
   // Amount & Gateway state
   const isUSD = currency.code === 'USD';
@@ -56,14 +42,12 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
   const [selectedGateway, setSelectedGateway] = useState<PaymentGatewayType>('bkash');
 
   // Checkout inputs
-  const [accountPhone, setAccountPhone] = useState('01712-984210');
-  const [otpCode, setOtpCode] = useState('482910');
-  const [pinCode, setPinCode] = useState('•••••');
-  const [cardNumber, setCardNumber] = useState('4242 •••• •••• 4242');
-  const [cardExpiry, setCardExpiry] = useState('12/28');
-  const [cardCvc, setCardCvc] = useState('884');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [generatedTrxId, setGeneratedTrxId] = useState('');
+  const [accountPhone, setAccountPhone] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [pinCode, setPinCode] = useState('');
+  const [cardNumber, setCardNumber] = useState('');
+  const [cardExpiry, setCardExpiry] = useState('');
+  const [cardCvc, setCardCvc] = useState('');
 
   if (!isOpen) return null;
 
@@ -82,28 +66,6 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
     setStep('gateway_checkout');
   };
 
-  const handleExecutePayment = (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    const trx = `${selectedGateway.toUpperCase()}-${Math.random().toString(36).substring(2, 9).toUpperCase()}`;
-    setGeneratedTrxId(trx);
-
-    setTimeout(() => {
-      setIsProcessing(false);
-      currencyCtx.rechargeTenantBalance(rechargeAmount);
-      if (onConfirmRecharge) {
-        onConfirmRecharge(rechargeAmount, selectedGateway, trx);
-      }
-      setStep('success_receipt');
-    }, 1200);
-  };
-
-  const handleFinish = () => {
-    setStep('specify_amount');
-    onClose();
-  };
-
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs animate-in fade-in">
       <div className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
@@ -117,7 +79,6 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               <h3 className="text-sm font-bold text-slate-900">
                 {step === 'specify_amount' && 'Recharge Account Balance'}
                 {step === 'gateway_checkout' && 'Secure Payment Gateway Checkout'}
-                {step === 'success_receipt' && 'Recharge Payment Successful'}
               </h3>
               <p className="text-[11px] text-slate-500 font-medium">
                 {tenantName} · {currency.code} ({currency.symbol})
@@ -305,10 +266,10 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               <div className="pt-2">
                 <button
                   type="submit"
-                  disabled={rechargeAmount <= 0}
+                  disabled
                   className="w-full py-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-40 text-white rounded-2xl text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2"
                 >
-                  <span>Continue to Payment Gateway</span>
+                  <span>Online top-ups unavailable: provider not configured</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>
               </div>
@@ -327,7 +288,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                     </div>
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider">bKash Payment Gateway</h4>
-                      <p className="text-[11px] opacity-90">Merchant: Nexura AI Platform</p>
+                      <p className="text-[11px] opacity-90">Payment provider not configured</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -347,7 +308,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                     </div>
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider">Nagad Gateway</h4>
-                      <p className="text-[11px] opacity-90">Merchant: Nexura AI Platform</p>
+                      <p className="text-[11px] opacity-90">Payment provider not configured</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -367,7 +328,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                     </div>
                     <div>
                       <h4 className="text-xs font-bold uppercase tracking-wider">Card Payment Checkout</h4>
-                      <p className="text-[11px] opacity-80">256-bit Encrypted SSL</p>
+                      <p className="text-[11px] opacity-80">External processor not configured</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -386,7 +347,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                       <Building2 className="w-4 h-4" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold uppercase tracking-wider">SSLCommerz Bank Gateway</h4>
+                      <h4 className="text-xs font-bold uppercase tracking-wider">Bank payment</h4>
                       <p className="text-[11px] opacity-80">Online Banking & Direct Debit</p>
                     </div>
                   </div>
@@ -400,7 +361,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
               )}
 
               {/* Checkout Form */}
-              <form onSubmit={handleExecutePayment} className="space-y-4 text-xs">
+              <fieldset disabled className="space-y-4 text-xs">
                 {(selectedGateway === 'bkash' || selectedGateway === 'nagad') && (
                   <div className="space-y-3">
                     <div>
@@ -492,7 +453,7 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                 <div className="p-3 bg-slate-50 rounded-xl border border-slate-200/80 flex items-center gap-2 text-slate-500 text-[11px]">
                   <Lock className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
                   <span>
-                    Sandbox test transaction. Real-time balance will be instantly credited to your tenant wallet.
+                    Online payment processing is not configured. No payment will be taken and the wallet cannot be credited here.
                   </span>
                 </div>
 
@@ -506,83 +467,16 @@ export const PaymentGatewayModal: React.FC<PaymentGatewayModalProps> = ({
                   </button>
                   <button
                     type="submit"
-                    disabled={isProcessing}
+                    disabled
                     className="w-2/3 py-2.5 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white rounded-2xl font-bold shadow-md transition-all flex items-center justify-center gap-2"
                   >
-                    {isProcessing ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Processing Payment...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Check className="w-4 h-4" />
-                        <span>Pay {formatCurrencyAmount(rechargeAmount, currency)}</span>
-                      </>
-                    )}
+                    <span>Payment unavailable</span>
                   </button>
                 </div>
-              </form>
+              </fieldset>
             </div>
           )}
 
-          {/* STEP 3: SUCCESS RECEIPT */}
-          {step === 'success_receipt' && (
-            <div className="space-y-5 text-center py-2 animate-in fade-in zoom-in-95">
-              <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto shadow-xs">
-                <CheckCircle2 className="w-9 h-9" />
-              </div>
-
-              <div>
-                <h4 className="text-base font-bold text-slate-900">
-                  Recharge Successful!
-                </h4>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  Your tenant balance has been topped up instantly.
-                </p>
-              </div>
-
-              {/* Receipt Details Box */}
-              <div className="p-4 bg-slate-50 border border-slate-200 rounded-2xl text-left text-xs space-y-2">
-                <div className="flex justify-between pb-2 border-b border-slate-200">
-                  <span className="text-slate-500">Transaction ID:</span>
-                  <span className="font-mono font-bold text-slate-900">{generatedTrxId}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Recharged Amount:</span>
-                  <span className="font-mono font-bold text-emerald-700">
-                    +{formatCurrencyAmount(rechargeAmount, currency)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">New Available Balance:</span>
-                  <span className="font-mono font-bold text-slate-900">
-                    {formatCurrencyAmount(newProjectedBalance, currency)}
-                  </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-slate-500">Added Message Capacity:</span>
-                  <span className="font-mono font-medium text-slate-800">
-                    ~{messagesYield.toLocaleString()} AI messages
-                  </span>
-                </div>
-                <div className="flex justify-between pt-2 border-t border-slate-200">
-                  <span className="text-slate-500">Payment Gateway:</span>
-                  <span className="font-bold text-slate-900 uppercase">
-                    {selectedGateway}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleFinish}
-                className="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl text-xs font-bold shadow-md transition-colors"
-              >
-                Return to Overview
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </div>

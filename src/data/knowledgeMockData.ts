@@ -5,7 +5,6 @@ import {
   ProductRecord,
   TrainingJob,
   TestCase,
-  KnowledgeSnapshot,
   BrandIdentityKnowledge,
 } from '../types/knowledge';
 
@@ -86,7 +85,7 @@ export const INITIAL_KNOWLEDGE_SOURCES: KnowledgeSource[] = [
     lastIndexed: 'Oct 26, 2026',
     lastContentUpdate: 'Oct 26, 2026',
     recordChunksCount: 42,
-    originDetails: 'Structured FAQ Manager · 24 Verified Entries',
+    originDetails: 'Structured FAQ records · 24 Verified Entries',
     isActive: true,
   },
   {
@@ -493,35 +492,3 @@ export const INITIAL_TEST_CASES: TestCase[] = [
   },
 ];
 
-export const INITIAL_SNAPSHOTS: KnowledgeSnapshot[] = [
-  {
-    version: 'v2.4',
-    label: 'Production - Live',
-    state: 'production',
-    publishedAt: 'Oct 24, 2026, 3:00 PM',
-    publishedBy: 'Sajedur Rahman',
-    sourcesCount: 6,
-    totalChunks: 284,
-    changeSummary: 'Updated Winter Catalog pricing, added bKash merchant validation rules.',
-  },
-  {
-    version: 'v2.5-draft',
-    label: 'Staging / QA Evaluation',
-    state: 'staging',
-    publishedAt: 'Not published yet',
-    publishedBy: 'Pending Staff Review',
-    sourcesCount: 7,
-    totalChunks: 312,
-    changeSummary: 'Includes Eid Delivery Schedule addendum and 8 updated shipping FAQs.',
-  },
-  {
-    version: 'v2.3',
-    label: 'Archived Baseline',
-    state: 'archived',
-    publishedAt: 'Oct 10, 2026, 11:30 AM',
-    publishedBy: 'Sajedur Rahman',
-    sourcesCount: 5,
-    totalChunks: 242,
-    changeSummary: 'Initial Q4 knowledge snapshot with standard delivery and refund policies.',
-  },
-];

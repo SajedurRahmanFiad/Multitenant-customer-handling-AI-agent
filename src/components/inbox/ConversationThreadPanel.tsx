@@ -11,8 +11,6 @@ import {
   MessageSquare,
   Bot,
   UserCheck,
-  Pause,
-  Play,
   CheckCircle2,
   AlertCircle,
   HelpCircle,
@@ -23,13 +21,12 @@ import {
   Clock,
   Volume2,
   FileText,
-  CornerDownRight,
   RefreshCw,
   Image as ImageIcon,
-  PhoneCall,
-  MessageCircle,
+  User,
 } from 'lucide-react';
-import { APPROVED_CANNED_REPLIES } from '../../data/inboxMockData';
+import { useApiData } from '../../hooks/useApiData';
+import { api, apiAssetUrl } from '../../lib/api';
 
 interface ConversationThreadPanelProps {
   conversation: Conversation;
@@ -37,12 +34,10 @@ interface ConversationThreadPanelProps {
   onSendMessage: (text: string, isInternalNote: boolean, attachment?: any) => void;
   onTakeoverFromAi: () => void;
   onReturnControlToAi: () => void;
-  onTogglePauseAi: () => void;
-  onToggleResolved: () => void;
   onOpenCorrectionModal: (message: Message) => void;
   onOpenTransferModal: () => void;
   onBackToList?: () => void;
-  onToggleContextDrawer?: () => void;
+  onToggleContextPanel?: () => void;
   isMobile?: boolean;
 }
 
@@ -52,29 +47,53 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
   onSendMessage,
   onTakeoverFromAi,
   onReturnControlToAi,
-  onTogglePauseAi,
-  onToggleResolved,
   onOpenCorrectionModal,
   onOpenTransferModal,
   onBackToList,
-  onToggleContextDrawer,
+  onToggleContextPanel,
   isMobile,
 }) => {
   const [inputText, setInputText] = useState('');
   const [isInternalNote, setIsInternalNote] = useState(false);
   const [isCannedDropdownOpen, setIsCannedDropdownOpen] = useState(false);
   const [selectedSourceToView, setSelectedSourceToView] = useState<{ title: string; snippet: string } | null>(null);
+  const [visibleCustomerTimestampId, setVisibleCustomerTimestampId] = useState<string | null>(null);
+  const attachmentInputRef = useRef<HTMLInputElement>(null);
+  const [pendingAttachment, setPendingAttachment] = useState<any>(null);
+  const cannedRepliesQ = useApiData<{ replies: Array<{ id: string; title: string; text: string; channel?: string }> }>('/inbox/canned-replies');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  useEffect(() => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const maxHeight = 144;
+    textarea.style.height = 'auto';
+    textarea.style.height = `${Math.min(textarea.scrollHeight, maxHeight)}px`;
+    textarea.style.overflowY = textarea.scrollHeight > maxHeight ? 'auto' : 'hidden';
+  }, [inputText]);
+
   const handleSend = () => {
-    if (!inputText.trim()) return;
-    onSendMessage(inputText, isInternalNote);
+    if (!inputText.trim() && !pendingAttachment) return;
+    onSendMessage(inputText, isInternalNote, pendingAttachment ?? undefined);
     setInputText('');
+    setPendingAttachment(null);
+  };
+
+  const handleAttachment = async (file?: File) => {
+    if (!file) return;
+    try {
+      const { url } = await api.upload<{ url: string }>('/inbox/upload', file);
+      setPendingAttachment({ type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('audio/') ? 'audio' : 'file', url, name: file.name, size: `${Math.max(1, Math.round(file.size / 1024))} KB` });
+    } catch (error) {
+      window.alert(error instanceof Error ? error.message : 'Attachment upload failed');
+    }
   };
 
   const handleSelectCanned = (text: string) => {
@@ -83,8 +102,6 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
   };
 
   const isHumanControlled = conversation.aiStatus === 'human_controlled';
-  const isAiPaused = conversation.aiStatus === 'paused';
-  const isResolved = conversation.status === 'resolved';
   const isWhatsApp = conversation.channel === 'whatsapp';
 
   return (
@@ -104,25 +121,19 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
             </button>
           )}
 
+          <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center shrink-0">
+            <User className="w-4 h-4 text-slate-500" />
+          </div>
           <h2 className="text-sm sm:text-base font-bold text-slate-900 truncate">
             {conversation.customer.name}
           </h2>
 
-          {/* Messenger / WhatsApp badge */}
-          <span
-            className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0 ${
-              isWhatsApp
-                ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
-                : 'bg-blue-50 text-blue-700 border border-blue-200/80'
-            }`}
-          >
-            {isWhatsApp ? (
-              <PhoneCall className="w-3 h-3 text-emerald-600" />
-            ) : (
-              <MessageCircle className="w-3 h-3 text-blue-600" />
-            )}
-            <span>{isWhatsApp ? 'WhatsApp' : 'Messenger'}</span>
-          </span>
+          <img
+            src={isWhatsApp ? '/uploads/whatsapp.png' : '/uploads/messenger.png'}
+            alt={isWhatsApp ? 'WhatsApp' : 'Messenger'}
+            title={isWhatsApp ? 'WhatsApp' : 'Messenger'}
+            className="w-4 h-4 rounded-full object-cover shrink-0"
+          />
         </div>
 
         {/* Right: Keep action buttons (search button removed) */}
@@ -150,44 +161,15 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
             </button>
           )}
 
-          {/* Pause AI */}
           <button
             type="button"
-            onClick={onTogglePauseAi}
-            className={`p-1.5 text-xs font-medium rounded-lg border transition-colors ${
-              isAiPaused
-                ? 'bg-amber-100 border-amber-300 text-amber-800'
-                : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-100'
-            }`}
-            title={isAiPaused ? 'Resume AI' : 'Pause AI for this conversation'}
+            onClick={onToggleContextPanel}
+            className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg"
+            title="Show or hide customer context"
+            aria-label="Show or hide customer context"
           >
-            {isAiPaused ? <Play className="w-4 h-4" /> : <Pause className="w-4 h-4" />}
+            <Info className="w-5 h-5" />
           </button>
-
-          {/* Resolve / Reopen */}
-          <button
-            type="button"
-            onClick={onToggleResolved}
-            className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors ${
-              isResolved
-                ? 'bg-slate-100 border-slate-300 text-slate-700'
-                : 'bg-white border-slate-200 text-slate-700 hover:bg-slate-100'
-            }`}
-          >
-            {isResolved ? 'Reopen' : 'Resolve'}
-          </button>
-
-          {/* Mobile Info Drawer Toggle */}
-          {isMobile && (
-            <button
-              type="button"
-              onClick={onToggleContextDrawer}
-              className="p-1.5 text-slate-500 hover:text-slate-900 rounded-lg"
-              title="Customer context"
-            >
-              <Info className="w-5 h-5" />
-            </button>
-          )}
         </div>
       </div>
 
@@ -249,36 +231,43 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
           return (
             <div
               key={msg.id}
-              className={`flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}
+              className={`relative w-full flex flex-col ${isCustomer ? 'items-start' : 'items-end'}`}
             >
               {/* Message Bubble Container */}
               <div
-                className={`max-w-[85%] sm:max-w-[75%] rounded-2xl p-4 text-xs leading-relaxed space-y-2 ${
+                onClick={() => {
+                  if (isCustomer && window.matchMedia('(max-width: 639px)').matches) {
+                    setVisibleCustomerTimestampId((currentId) =>
+                      currentId === msg.id ? null : msg.id,
+                    );
+                  }
+                }}
+                className={`relative max-w-[85%] sm:max-w-[75%] [overflow-wrap:anywhere] rounded-2xl p-4 text-xs leading-relaxed space-y-2 ${
                   isCustomer
-                    ? 'bg-white text-slate-900 border border-slate-200/90 shadow-xs rounded-bl-xs'
+                    ? 'group bg-white text-slate-900 border border-slate-200/90 shadow-xs rounded-bl-xs'
                     : isAi
                     ? 'bg-slate-900 text-white rounded-br-xs shadow-sm'
                     : 'bg-slate-800 text-white rounded-br-xs shadow-sm'
                 }`}
               >
-                {/* Bubble Header */}
-                <div
-                  className={`flex items-center justify-between gap-3 text-[11px] ${
-                    isCustomer ? 'text-slate-400' : 'text-slate-300'
-                  }`}
-                >
-                  <span className="font-semibold">
-                    {isCustomer
-                      ? msg.senderName
-                      : isAi
-                      ? 'AI Support Agent'
-                      : `Staff (${msg.senderName})`}
+                {isCustomer && (
+                  <span className="pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 hidden -translate-x-1/2 whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-[10px] font-medium text-white shadow-sm sm:block sm:opacity-0 sm:transition-opacity sm:group-hover:opacity-100">
+                    {msg.timestamp}
                   </span>
-                  <span className="font-mono text-[10px]">{msg.timestamp}</span>
-                </div>
+                )}
+
+                {/* Bubble Header */}
+                {!isCustomer && (
+                  <div className="flex items-center justify-between gap-3 text-[11px] text-slate-300">
+                    <span className="min-w-0 font-semibold [overflow-wrap:anywhere]">
+                      {isAi ? 'AI Support Agent' : msg.senderName}
+                    </span>
+                    <span className="font-mono text-[10px]">{msg.timestamp}</span>
+                  </div>
+                )}
 
                 {/* Message Body */}
-                <p className="whitespace-pre-wrap">{msg.text}</p>
+                <p className="whitespace-pre-wrap [overflow-wrap:anywhere]">{msg.text}</p>
 
                 {/* Attachment Previews */}
                 {msg.attachments && msg.attachments.length > 0 && (
@@ -288,7 +277,7 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
                         {att.type === 'image' ? (
                           <div className="rounded-xl overflow-hidden border border-slate-200/40 bg-slate-950/20 max-w-sm">
                             <img
-                              src={att.url}
+                              src={apiAssetUrl(att.url)}
                               alt={att.name}
                               referrerPolicy="no-referrer"
                               className="w-full h-44 object-cover hover:opacity-95 transition-opacity"
@@ -358,13 +347,38 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
                   </div>
                 )}
 
-                {/* Delivery checkmarks for staff */}
+                {/* Delivery status ticks for sent messages */}
                 {!isCustomer && msg.deliveryState && (
-                  <div className="flex justify-end text-[10px] text-slate-400 font-mono gap-1">
-                    <span>{msg.deliveryState}</span>
+                  <div className="flex items-center justify-end gap-1 text-[10px] font-mono">
+                    <span className="text-slate-400">
+                      {msg.deliveryState === 'sent'
+                        ? 'Sent'
+                        : msg.deliveryState === 'delivered'
+                        ? 'Delivered'
+                        : 'Read'}
+                    </span>
+                    <div className="flex items-center -space-x-[9px]">
+                      <Check
+                        className={`w-3.5 h-3.5 ${
+                          msg.deliveryState === 'read' ? 'text-white' : 'text-slate-400'
+                        }`}
+                      />
+                      {msg.deliveryState !== 'sent' && (
+                        <Check
+                          className={`w-3.5 h-3.5 ${
+                            msg.deliveryState === 'read' ? 'text-white' : 'text-slate-400'
+                          }`}
+                        />
+                      )}
+                    </div>
                   </div>
                 )}
               </div>
+              {isCustomer && visibleCustomerTimestampId === msg.id && (
+                <div className="pointer-events-none absolute left-1/2 top-0 z-20 -translate-x-1/2 -translate-y-full whitespace-nowrap rounded-md bg-slate-900 px-2.5 py-1.5 text-[10px] font-medium text-white shadow-sm sm:hidden">
+                  {msg.timestamp}
+                </div>
+              )}
             </div>
           );
         })}
@@ -408,7 +422,8 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
               }`}
             >
               <MessageSquare className="w-3.5 h-3.5" />
-              <span>Reply to Customer</span>
+              <span className="sm:hidden">Reply</span>
+              <span className="hidden sm:inline">Reply to Customer</span>
             </button>
             <button
               type="button"
@@ -420,7 +435,8 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
               }`}
             >
               <Lock className="w-3.5 h-3.5 text-amber-700" />
-              <span>Internal Note (Staff only)</span>
+              <span className="sm:hidden">Note</span>
+              <span className="hidden sm:inline">Internal Note (Staff only)</span>
             </button>
           </div>
 
@@ -432,7 +448,8 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
               className="px-2.5 py-1 text-xs font-semibold rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-slate-200 flex items-center gap-1.5 transition-colors"
             >
               <Bookmark className="w-3.5 h-3.5" />
-              <span>Approved Replies</span>
+              <span className="sm:hidden">Saved</span>
+              <span className="hidden sm:inline">Approved Replies</span>
             </button>
 
             {isCannedDropdownOpen && (
@@ -440,7 +457,7 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
                 <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 px-2 py-1">
                   Insert Approved Reply
                 </div>
-                {APPROVED_CANNED_REPLIES.map((can) => (
+                {(cannedRepliesQ.data?.replies ?? []).map((can) => (
                   <button
                     key={can.id}
                     type="button"
@@ -449,11 +466,12 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
                   >
                     <div className="font-semibold text-slate-900 flex items-center justify-between">
                       <span>{can.title}</span>
-                      <span className="text-[10px] text-slate-400">{can.category}</span>
+                      <span className="text-[10px] text-slate-400">{can.channel ?? 'All channels'}</span>
                     </div>
                     <div className="text-[11px] text-slate-500 truncate">{can.text}</div>
                   </button>
                 ))}
+                {!cannedRepliesQ.loading && !cannedRepliesQ.data?.replies.length && <p className="px-2 py-3 text-xs text-slate-500">No saved replies yet.</p>}
               </div>
             )}
           </div>
@@ -468,6 +486,7 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
           }`}
         >
           <textarea
+            ref={textareaRef}
             rows={2}
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
@@ -484,33 +503,26 @@ export const ConversationThreadPanel: React.FC<ConversationThreadPanelProps> = (
             }
             className="w-full p-3 text-xs bg-transparent border-none outline-none resize-none text-slate-900 placeholder:text-slate-400"
           />
+          {pendingAttachment && <div className="px-3 py-1 text-[11px] text-slate-600">Attached: {pendingAttachment.name} <button type="button" className="ml-2 text-rose-600" onClick={() => setPendingAttachment(null)}>Remove</button></div>}
 
           {/* Composer Footer Actions */}
-          <div className="p-2 flex items-center justify-between border-t border-slate-200/60">
+          <div className="p-2 flex items-center justify-between">
             <div className="flex items-center gap-2 text-slate-400">
+              <input ref={attachmentInputRef} type="file" className="hidden" onChange={(e) => { void handleAttachment(e.target.files?.[0]); e.currentTarget.value = ''; }} />
               <button
                 type="button"
-                onClick={() => alert('File attachment simulation: ready for image/audio uploads')}
+                onClick={() => attachmentInputRef.current?.click()}
                 className="p-1 hover:text-slate-700 rounded-lg hover:bg-slate-200/60 transition-colors"
                 title="Attach file / image"
               >
                 <Paperclip className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onOpenTransferModal}
-                className="text-xs text-slate-500 hover:text-slate-800 flex items-center gap-1"
-                title="Transfer to another department"
-              >
-                <CornerDownRight className="w-3.5 h-3.5" />
-                <span className="hidden sm:inline">Transfer</span>
               </button>
             </div>
 
             <button
               type="button"
               onClick={handleSend}
-              disabled={!inputText.trim()}
+              disabled={!inputText.trim() && !pendingAttachment}
               className={`px-4 py-2 text-xs font-semibold rounded-xl transition-all flex items-center gap-1.5 ${
                 isInternalNote
                   ? 'bg-amber-800 text-white hover:bg-amber-900 disabled:opacity-50'

@@ -1,6 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
 import {
-  Search,
   Bell,
   ChevronDown,
   Building2,
@@ -12,6 +11,8 @@ import {
 } from 'lucide-react';
 import { PageId } from '../../types/navigation';
 import { CurrentUser } from '../../types/auth';
+import { useApiData } from '../../hooks/useApiData';
+import { api } from '../../lib/api';
 
 interface MergedHeaderProps {
   currentUser: CurrentUser;
@@ -28,43 +29,22 @@ interface NotificationItem {
   type: 'handoff' | 'knowledge' | 'system';
 }
 
-const INITIAL_NOTIFICATIONS: NotificationItem[] = [
-  {
-    id: 'notif_1',
-    title: 'Staff Handover Requested',
-    description: 'Tanvir Hossain escalated via WhatsApp (Transit damage dispute)',
-    time: '8m ago',
-    read: false,
-    type: 'handoff',
-  },
-  {
-    id: 'notif_2',
-    title: 'bKash Payment Verification',
-    description: 'Shaila Parvin sent TRXID 9LK812 on Messenger for manual review',
-    time: '24m ago',
-    read: false,
-    type: 'handoff',
-  },
-  {
-    id: 'notif_3',
-    title: 'Knowledge Indexing Complete',
-    description: 'Document "Eid Delivery Schedule 2026" chunked into 14 embeddings',
-    time: '2h ago',
-    read: true,
-    type: 'knowledge',
-  },
-];
-
 export const MergedHeader: React.FC<MergedHeaderProps> = ({
   currentUser,
   onNavigate,
   onSignOut,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isProfileOpen, setIsProfileOpen] = useState(false);
-  const [notifications, setNotifications] = useState<NotificationItem[]>(INITIAL_NOTIFICATIONS);
+  const [notifications, setNotifications] = useState<NotificationItem[]>([]);
+  const notificationsQ = useApiData<{ notifications: Array<{ id: string; title: string; message: string; timestamp: string; isRead: boolean; sourceModule: string }> }>('/settings/notifications');
+  useEffect(() => {
+    if (!notificationsQ.data) return;
+    setNotifications(notificationsQ.data.notifications.map((item) => ({
+      id: item.id, title: item.title, description: item.message, time: item.timestamp,
+      read: item.isRead, type: /inbox|conversation|team/i.test(item.sourceModule) ? 'handoff' : /knowledge/i.test(item.sourceModule) ? 'knowledge' : 'system',
+    })));
+  }, [notificationsQ.data]);
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
@@ -87,7 +67,7 @@ export const MergedHeader: React.FC<MergedHeaderProps> = ({
   const unreadCount = notifications.filter((n) => !n.read).length;
 
   const handleMarkAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
+    api.post('/settings/notifications/read-all', {}).then(() => notificationsQ.reload()).catch(() => undefined);
   };
 
   const getInitials = (name: string) => {
@@ -107,33 +87,8 @@ export const MergedHeader: React.FC<MergedHeaderProps> = ({
         </h1>
       </div>
 
-      {/* Right side: Search bar, Notification button, Profile button (Desktop only) */}
+      {/* Right side: Notification button, Profile button (Desktop only) */}
       <div className="flex items-center gap-3 shrink-0">
-        {/* Search Bar */}
-        <div className="relative">
-          <div
-            className={`flex items-center gap-2 px-3.5 py-2 bg-white rounded-2xl border transition-all duration-200 ${
-              isSearchFocused
-                ? 'border-slate-900 ring-2 ring-slate-100 shadow-xs w-72'
-                : 'border-slate-200/90 hover:border-slate-300 w-60'
-            }`}
-          >
-            <Search className="w-4 h-4 text-slate-400 shrink-0" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-              placeholder="Search conversations, knowledge..."
-              className="bg-transparent border-none outline-none text-xs text-slate-900 placeholder:text-slate-400 w-full"
-            />
-            <kbd className="hidden sm:inline-block px-1.5 py-0.5 text-[10px] font-mono text-slate-400 bg-slate-100 rounded-md shrink-0">
-              ⌘K
-            </kbd>
-          </div>
-        </div>
-
         {/* Notification Button */}
         <div className="relative" ref={notifRef}>
           <button

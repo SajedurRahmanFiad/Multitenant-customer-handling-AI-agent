@@ -1,0 +1,124 @@
+- generic [ref=f4e3]:
+  - banner [ref=f4e4]:
+    - generic [ref=f4e5]:
+      - generic [ref=f4e6]: S
+      - generic [ref=f4e7]:
+        - generic [ref=f4e8]: Support API
+        - generic [ref=f4e9]: Platform Admin
+    - button "Open navigation" [ref=f4e10]
+  - main [ref=f4e13]:
+    - generic [ref=f4e15]:
+      - generic [ref=f4e18]:
+        - button "Tenants Directory 5" [ref=f4e19] [cursor=pointer]:
+          - generic [ref=f4e24]: Tenants Directory
+          - generic [ref=f4e25]: "5"
+        - button "Currency System & Rates 6 Currencies" [ref=f4e26] [cursor=pointer]:
+          - generic [ref=f4e32]: Currency System & Rates
+          - generic [ref=f4e33]: 6 Currencies
+        - button "Global Pipeline Layers 5 Layers" [ref=f4e34] [cursor=pointer]:
+          - generic [ref=f4e39]: Global Pipeline Layers
+          - generic [ref=f4e40]: 5 Layers
+        - button "AI Provider Registry KMS" [ref=f4e41] [cursor=pointer]:
+          - generic [ref=f4e45]: AI Provider Registry
+          - generic [ref=f4e46]: KMS
+        - button "Usage & Cost Control" [active] [ref=f4e47] [cursor=pointer]
+        - button "Queues & BullMQ 3" [ref=f4e51] [cursor=pointer]:
+          - generic [ref=f4e56]: Queues & BullMQ
+          - generic [ref=f4e57]: "3"
+      - generic [ref=f4e213]:
+        - generic [ref=f4e214]:
+          - generic [ref=f4e215]:
+            - generic [ref=f4e216]: Gross Monthly Revenue
+            - generic [ref=f4e221]:
+              - generic [ref=f4e222]: $18,450
+              - generic [ref=f4e223]: +14.2%
+            - paragraph [ref=f4e227]: Tenant usage & platform billings collected
+          - generic [ref=f4e228]:
+            - generic [ref=f4e229]: Raw AI Provider Cost
+            - generic [ref=f4e234]:
+              - generic [ref=f4e235]: $4,120.35
+              - generic [ref=f4e236]: Avg $3.10 / 1k msgs
+            - paragraph [ref=f4e237]: Direct token & API infrastructure expense
+          - generic [ref=f4e238]:
+            - generic [ref=f4e239]: Platform Gross Margin
+            - generic [ref=f4e245]:
+              - generic [ref=f4e246]: 77.6%
+              - generic [ref=f4e247]: "Net: $14,329.65"
+            - paragraph [ref=f4e248]: Healthy unit economics across all tenants
+          - generic [ref=f4e249]:
+            - generic [ref=f4e250]: Live Burn Rate
+            - generic [ref=f4e255]:
+              - generic [ref=f4e256]: "445"
+              - generic [ref=f4e257]: tokens / sec
+            - paragraph [ref=f4e258]: 38.5M tokens in past 24 hours
+        - generic [ref=f4e259]:
+          - generic [ref=f4e260]:
+            - generic [ref=f4e265]:
+              - heading "Automated Anomaly & Runaway Loop Protection" [level=3] [ref=f4e266]
+              - paragraph [ref=f4e267]: Safety circuit breaker triggered if abnormal recursive token loops or upstream provider errors are detected
+            - button "Save Policy" [ref=f4e268]
+          - generic [ref=f4e270]:
+            - generic [ref=f4e272] [cursor=pointer]:
+              - generic [ref=f4e273]:
+                - generic [ref=f4e274]:
+                  - radio "Auto-Switch to Low-Cost Fallback Recommended Seamlessly reroutes to Gemini 2.5 Flash or Llama 3.3. Preserves customer experience without disruption." [checked] [ref=f4e275]
+                  - generic [ref=f4e276]: Auto-Switch to Low-Cost Fallback
+                - generic [ref=f4e277]: Recommended
+              - paragraph [ref=f4e278]: Seamlessly reroutes to Gemini 2.5 Flash or Llama 3.3. Preserves customer experience without disruption.
+            - generic [ref=f4e280] [cursor=pointer]:
+              - generic [ref=f4e282]:
+                - radio "Offline Staff Notification Template Sends a polite branded non-AI notification and notifies live agents to step in." [ref=f4e283]
+                - generic [ref=f4e284]: Offline Staff Notification Template
+              - paragraph [ref=f4e285]: Sends a polite branded non-AI notification and notifies live agents to step in.
+            - generic [ref=f4e287] [cursor=pointer]:
+              - generic [ref=f4e289]:
+                - radio "Temporary Ingestion Pause Pauses automated generation for the offending thread until administrator review." [ref=f4e290]
+                - generic [ref=f4e291]: Temporary Ingestion Pause
+              - paragraph [ref=f4e292]: Pauses automated generation for the offending thread until administrator review.
+        - generic [ref=f4e293]:
+          - generic [ref=f4e294]:
+            - generic [ref=f4e295]:
+              - heading "Top Consuming Tenants by Volume" [level=3] [ref=f4e296]
+              - paragraph [ref=f4e297]: Live consumption monitor tracking message throughput and infrastructure cost
+            - button "Export CSV" [ref=f4e298]
+          - table [ref=f4e303]:
+            - rowgroup [ref=f4e304]:
+              - row [ref=f4e305]:
+                - columnheader "Tenant Business" [ref=f4e306]
+                - columnheader "Primary Model" [ref=f4e307]
+                - columnheader "Conversations" [ref=f4e308]
+                - columnheader "Token Volume" [ref=f4e309]
+                - columnheader "Raw Provider Spend" [ref=f4e310]
+            - rowgroup [ref=f4e311]:
+              - row [ref=f4e312]:
+                - cell "Dhaka Pharma & Care ten_med_04" [ref=f4e313]:
+                  - generic [ref=f4e314]: Dhaka Pharma & Care
+                  - generic [ref=f4e315]: ten_med_04
+                - cell "claude-3-5-sonnet" [ref=f4e316]
+                - cell "61,200" [ref=f4e321]
+                - cell "14.20M tokens" [ref=f4e322]
+                - cell "$245.60" [ref=f4e323]
+              - row [ref=f4e324]:
+                - cell "Gadget Express BD ten_gadget_02" [ref=f4e325]:
+                  - generic [ref=f4e326]: Gadget Express BD
+                  - generic [ref=f4e327]: ten_gadget_02
+                - cell "gpt-4o-mini" [ref=f4e328]
+                - cell "34,100" [ref=f4e333]
+                - cell "8.40M tokens" [ref=f4e334]
+                - cell "$112.80" [ref=f4e335]
+              - row [ref=f4e336]:
+                - cell "Bengal Loom & Crafts ten_loom_01" [ref=f4e337]:
+                  - generic [ref=f4e338]: Bengal Loom & Crafts
+                  - generic [ref=f4e339]: ten_loom_01
+                - cell "gemini-2.5-flash" [ref=f4e340]
+                - cell "12,480" [ref=f4e345]
+                - cell "3.10M tokens" [ref=f4e346]
+                - cell "$38.42" [ref=f4e347]
+              - row [ref=f4e348]:
+                - cell "Aarong Handcrafts Reseller ten_cloud_03" [ref=f4e349]:
+                  - generic [ref=f4e350]: Aarong Handcrafts Reseller
+                  - generic [ref=f4e351]: ten_cloud_03
+                - cell "gemini-2.5-flash" [ref=f4e352]
+                - cell "2,840" [ref=f4e357]
+                - cell "0.92M tokens" [ref=f4e358]
+                - cell "$14.20" [ref=f4e359]

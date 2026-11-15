@@ -10,14 +10,14 @@ export interface MessengerConnection {
   status: ChannelConnectionStatus;
   grantedPermissions: string[];
   missingPermissions: string[];
-  lastWebhookAt: string;
-  lastReplyAt: string;
+  lastWebhookAt: string | null;
+  lastReplyAt: string | null;
   tokenHealth: {
     status: 'healthy' | 'expiring_soon' | 'expired';
     daysRemaining: number;
     tokenType: string;
     lastRefreshed: string;
-    expiresAt: string;
+    expiresAt: string | null;
     maskedToken: string;
   };
   subscribedFields: string[];
@@ -52,19 +52,19 @@ export interface WhatsAppConnection {
   verificationStatus: 'verified' | 'unverified' | 'in_review';
   hasGreenTick: boolean;
   status: ChannelConnectionStatus;
-  qualityRating: 'GREEN' | 'YELLOW' | 'RED';
-  messagingTierLimit: string;
-  current24hWindowSent: number;
-  lastInboundAt: string;
-  lastOutboundAt: string;
-  maskedToken: string;
+  qualityRating: 'GREEN' | 'YELLOW' | 'RED' | 'UNKNOWN';
+  messagingTierLimit: string | null;
+  current24hWindowSent: number | null;
+  lastInboundAt: string | null;
+  lastOutboundAt: string | null;
+  maskedToken: string | null;
   tokenHealth: {
     status: 'healthy' | 'expiring_soon' | 'expired';
     type: 'System User Permanent Token' | 'User Access Token';
     lastRefreshed: string;
   };
   templates: WhatsAppTemplate[];
-  throughputLimit: string;
+  throughputLimit: string | null;
 }
 
 export interface WebhookDiagnosticEvent {

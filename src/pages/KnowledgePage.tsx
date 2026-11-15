@@ -1,58 +1,51 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   KnowledgeTab,
   KnowledgeSource,
-  FaqItem,
   BusinessPolicy,
   ProductRecord,
   TrainingJob,
-  TestCase,
-  KnowledgeSnapshot,
   BrandIdentityKnowledge,
 } from '../types/knowledge';
-import {
-  INITIAL_KNOWLEDGE_SOURCES,
-  INITIAL_FAQS,
-  INITIAL_POLICIES,
-  INITIAL_PRODUCTS,
-  INITIAL_TRAINING_JOBS,
-  INITIAL_TEST_CASES,
-  INITIAL_SNAPSHOTS,
-  INITIAL_BRAND_IDENTITY,
-} from '../data/knowledgeMockData';
+import { api } from '../lib/api';
+import { useApiData } from '../hooks/useApiData';
 import { KnowledgeSourcesView } from '../components/knowledge/KnowledgeSourcesView';
-import { FaqManagerView } from '../components/knowledge/FaqManagerView';
 import { BusinessPoliciesView } from '../components/knowledge/BusinessPoliciesView';
 import { ProductCatalogueView } from '../components/knowledge/ProductCatalogueView';
 import { BrandIdentityView } from '../components/knowledge/BrandIdentityView';
 import { TrainingJobsView } from '../components/knowledge/TrainingJobsView';
-import { KnowledgeTestingView } from '../components/knowledge/KnowledgeTestingView';
-import { KnowledgeVersioningView } from '../components/knowledge/KnowledgeVersioningView';
 import {
   Database,
-  HelpCircle,
   ShieldCheck,
   Package,
   Sparkles,
   Cpu,
-  FlaskConical,
-  GitBranch,
   CheckCircle2,
 } from 'lucide-react';
 import { SubPageNav } from '../components/navigation/SubPageNav';
+import { useUrlQueryState } from '../hooks/useUrlQueryState';
 
 export const KnowledgePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<KnowledgeTab>('sources');
+  const [activeTab, setActiveTab] = useUrlQueryState<KnowledgeTab>('tab', 'sources', [
+    'sources', 'policies', 'catalogue', 'brand', 'jobs',
+  ]);
 
   // State
-  const [sources, setSources] = useState<KnowledgeSource[]>(INITIAL_KNOWLEDGE_SOURCES);
-  const [faqs, setFaqs] = useState<FaqItem[]>(INITIAL_FAQS);
-  const [policies, setPolicies] = useState<BusinessPolicy[]>(INITIAL_POLICIES);
-  const [products, setProducts] = useState<ProductRecord[]>(INITIAL_PRODUCTS);
-  const [brandIdentity, setBrandIdentity] = useState<BrandIdentityKnowledge>(INITIAL_BRAND_IDENTITY);
-  const [jobs, setJobs] = useState<TrainingJob[]>(INITIAL_TRAINING_JOBS);
-  const [testCases, setTestCases] = useState<TestCase[]>(INITIAL_TEST_CASES);
-  const [snapshots, setSnapshots] = useState<KnowledgeSnapshot[]>(INITIAL_SNAPSHOTS);
+  const [sources, setSources] = useState<KnowledgeSource[]>([]);
+  const [policies, setPolicies] = useState<BusinessPolicy[]>([]);
+  const [products, setProducts] = useState<ProductRecord[]>([]);
+  const [brandIdentity, setBrandIdentity] = useState<BrandIdentityKnowledge>({ tagline: '', brandVoice: '', tonePillars: [], vocabularyGuidelines: { preferredTerms: [], forbiddenTerms: [] }, greetingConvention: '', culturalNuances: '', lastUpdated: '' });
+  const [jobs, setJobs] = useState<TrainingJob[]>([]);
+  const sourcesQ = useApiData<{ sources: KnowledgeSource[] }>('/knowledge/sources');
+  const policiesQ = useApiData<{ policies: BusinessPolicy[] }>('/knowledge/policies');
+  const productsQ = useApiData<{ products: ProductRecord[] }>('/knowledge/products');
+  const brandQ = useApiData<{ brand: BrandIdentityKnowledge }>('/knowledge/brand');
+  const jobsQ = useApiData<{ jobs: TrainingJob[] }>('/knowledge/jobs');
+  useEffect(() => { if (sourcesQ.data) setSources(sourcesQ.data.sources); }, [sourcesQ.data]);
+  useEffect(() => { if (policiesQ.data) setPolicies(policiesQ.data.policies); }, [policiesQ.data]);
+  useEffect(() => { if (productsQ.data) setProducts(productsQ.data.products); }, [productsQ.data]);
+  useEffect(() => { if (brandQ.data) setBrandIdentity(brandQ.data.brand); }, [brandQ.data]);
+  useEffect(() => { if (jobsQ.data) setJobs(jobsQ.data.jobs); }, [jobsQ.data]);
 
   // Toast
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -61,231 +54,72 @@ export const KnowledgePage: React.FC = () => {
     setTimeout(() => setToastMessage(null), 3000);
   };
 
+  const refreshKnowledge = () => { sourcesQ.reload(); policiesQ.reload(); productsQ.reload(); brandQ.reload(); jobsQ.reload(); };
   // 1. Sources Handlers
   const handleAddSource = (newSource: Omit<KnowledgeSource, 'id'>) => {
-    const src: KnowledgeSource = {
-      ...newSource,
-      id: `src_${Date.now()}`,
-    };
-    setSources((prev) => [src, ...prev]);
-
-    // Add a corresponding training job
-    const newJob: TrainingJob = {
-      id: `job_${Date.now()}`,
-      sourceName: src.name,
-      jobType: 'Initial Indexing',
-      status: 'running',
-      documentsProcessed: 0,
-      totalDocuments: src.recordChunksCount || 10,
-      recordsSkipped: 0,
-      durationMs: 0,
-      startedAt: 'Just now',
-    };
-    setJobs((prev) => [newJob, ...prev]);
-    showToast(`Source "${src.name}" added and queued for vectorization`);
+    api.post('/knowledge/sources', newSource).then(() => { sourcesQ.reload(); jobsQ.reload(); showToast(`Source "${newSource.name}" saved`); }).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not save source'));
   };
 
   const handleRefreshSource = (id: string) => {
     const source = sources.find((s) => s.id === id);
     if (!source) return;
 
-    setSources((prev) =>
-      prev.map((s) =>
-        s.id === id ? { ...s, status: 'processing', lastIndexed: 'Just now' } : s
-      )
-    );
-
-    const reindexJob: TrainingJob = {
-      id: `job_${Date.now()}`,
-      sourceName: source.name,
-      jobType: 'Re-index',
-      status: 'running',
-      documentsProcessed: 0,
-      totalDocuments: source.recordChunksCount,
-      recordsSkipped: 0,
-      durationMs: 0,
-      startedAt: 'Just now',
-    };
-    setJobs((prev) => [reindexJob, ...prev]);
-    showToast(`Re-indexing triggered for "${source.name}"`);
+    api.post(`/knowledge/sources/${id}/reindex`, {}).then(() => { sourcesQ.reload(); jobsQ.reload(); showToast(`Re-index queued for "${source.name}"`); }).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not re-index source'));
   };
 
   const handleDeleteSource = (id: string) => {
     const src = sources.find((s) => s.id === id);
-    setSources((prev) => prev.filter((s) => s.id !== id));
-    showToast(`Source "${src?.name || 'Item'}" removed from training pipeline`);
+    api.del(`/knowledge/sources/${id}`).then(() => { sourcesQ.reload(); showToast(`Source "${src?.name || 'Item'}" removed`); }).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not delete source'));
   };
 
-  const handleToggleSourceActive = (id: string) => {
-    setSources((prev) =>
-      prev.map((s) =>
-        s.id === id
-          ? {
-              ...s,
-              status: s.status === 'ready' ? 'outdated' : 'ready',
-            }
-          : s
-      )
-    );
-    showToast('Source status updated');
-  };
-
-  // 2. FAQ Handlers
-  const handleAddFaq = (newFaq: Omit<FaqItem, 'id'>) => {
-    const faq: FaqItem = {
-      ...newFaq,
-      id: `faq_${Date.now()}`,
-    };
-    setFaqs((prev) => [faq, ...prev]);
-    showToast(`FAQ added: "${faq.question.slice(0, 30)}..."`);
-  };
-
-  const handleUpdateFaq = (updatedFaq: FaqItem) => {
-    setFaqs((prev) => prev.map((f) => (f.id === updatedFaq.id ? updatedFaq : f)));
-    showToast('FAQ updated successfully');
-  };
-
-  const handleDeleteFaq = (id: string) => {
-    setFaqs((prev) => prev.filter((f) => f.id !== id));
-    showToast('FAQ removed');
-  };
-
-  // 3. Policies Handlers
+  // 2. Policies Handlers
   const handleAddPolicy = (newPolicy: Omit<BusinessPolicy, 'id'>) => {
-    const policy: BusinessPolicy = {
-      ...newPolicy,
-      id: `pol_${Date.now()}`,
-    };
-    setPolicies((prev) => [policy, ...prev]);
-    showToast(`Operational policy "${policy.name}" saved`);
+    api.post('/knowledge/policies', newPolicy).then(() => policiesQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not save policy'));
   };
 
   const handleUpdatePolicy = (updatedPolicy: BusinessPolicy) => {
-    setPolicies((prev) =>
-      prev.map((p) => (p.id === updatedPolicy.id ? updatedPolicy : p))
-    );
-    showToast('Policy updated');
+    api.patch(`/knowledge/policies/${updatedPolicy.id}`, updatedPolicy).then(() => policiesQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not update policy'));
   };
 
   const handleDeletePolicy = (id: string) => {
-    setPolicies((prev) => prev.filter((p) => p.id !== id));
-    showToast('Policy deleted');
+    api.del(`/knowledge/policies/${id}`).then(() => policiesQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not delete policy'));
   };
 
-  // 4. Product Catalogue Handlers
+  // 3. Product Catalogue Handlers
   const handleAddProduct = (newProduct: Omit<ProductRecord, 'id'>) => {
-    const prod: ProductRecord = {
-      ...newProduct,
-      id: `prod_${Date.now()}`,
-    };
-    setProducts((prev) => [prod, ...prev]);
-    showToast(`Product "${prod.name}" added to active catalogue`);
+    const payload = { ...newProduct, price: Number(String(newProduct.price).replace(/[^\d.]/g, '')), discountedPrice: newProduct.discountedPrice ? Number(String(newProduct.discountedPrice).replace(/[^\d.]/g, '')) : null };
+    api.post('/knowledge/products', payload).then(() => productsQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not save product'));
   };
 
   const handleUpdateProduct = (updatedProduct: ProductRecord) => {
-    setProducts((prev) =>
-      prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
-    );
-    showToast(`Product "${updatedProduct.name}" updated`);
+    const payload = { ...updatedProduct, price: Number(String(updatedProduct.price).replace(/[^\d.]/g, '')), discountedPrice: updatedProduct.discountedPrice ? Number(String(updatedProduct.discountedPrice).replace(/[^\d.]/g, '')) : null };
+    api.patch(`/knowledge/products/${updatedProduct.id}`, payload).then(() => productsQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not update product'));
   };
 
   const handleDeleteProduct = (id: string) => {
-    setProducts((prev) => prev.filter((p) => p.id !== id));
-    showToast('Product removed from catalogue');
+    api.del(`/knowledge/products/${id}`).then(() => productsQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not delete product'));
   };
 
-  const handleImportCsv = (count: number) => {
-    showToast(`Imported ${count} new products from CSV into staging catalogue`);
+  const handleImportCsv = (rows: Omit<ProductRecord, 'id'>[]) => {
+    Promise.all(rows.map((product) => api.post('/knowledge/products', { ...product, price: Number(product.price) })))
+      .then(() => { productsQ.reload(); showToast(`Imported ${rows.length} products`); })
+      .catch((e: unknown) => { productsQ.reload(); showToast(e instanceof Error ? `Import stopped: ${e.message}` : 'Product import failed'); });
   };
 
-  // 5. Training Jobs Handlers
+  // 4. Training Jobs Handlers
   const handleRetryJob = (id: string) => {
-    setJobs((prev) =>
-      prev.map((j) =>
-        j.id === id
-          ? {
-              ...j,
-              status: 'running',
-              startedAt: 'Just now',
-              errorMessage: undefined,
-              recordsSkipped: 0,
-            }
-          : j
-      )
-    );
-    showToast('Training job restarted');
+    api.post(`/knowledge/jobs/${id}/retry`, {}).then(() => jobsQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not retry job'));
   };
 
   const handleCancelJob = (id: string) => {
-    setJobs((prev) =>
-      prev.map((j) => (j.id === id ? { ...j, status: 'failed', errorMessage: 'Cancelled by user' } : j))
-    );
-    showToast('Job cancelled');
+    api.post(`/knowledge/jobs/${id}/cancel`, {}).then(() => jobsQ.reload()).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not cancel job'));
   };
 
   const handleTriggerFullReindex = () => {
-    const fullJob: TrainingJob = {
-      id: `job_${Date.now()}`,
-      sourceName: 'Complete System Re-index (All Active Sources)',
-      jobType: 'Re-index',
-      status: 'running',
-      documentsProcessed: 0,
-      totalDocuments: sources.reduce((acc, s) => acc + s.recordChunksCount, 0),
-      recordsSkipped: 0,
-      durationMs: 0,
-      startedAt: 'Just now',
-    };
-    setJobs((prev) => [fullJob, ...prev]);
-    showToast('Full workspace re-index queued across all sources');
-  };
-
-  // 6. Testing Handlers
-  const handleAddTestCase = (tc: TestCase) => {
-    setTestCases((prev) => [tc, ...prev]);
-  };
-
-  const handleUpdateVerdict = (id: string, verdict: 'correct' | 'incorrect' | 'incomplete') => {
-    setTestCases((prev) =>
-      prev.map((t) => (t.id === id ? { ...t, verdict } : t))
-    );
-    showToast(`Test marked as ${verdict}`);
-  };
-
-  // 7. Versioning Handlers
-  const handlePublishStaging = (summary: string) => {
-    const nextVer = 'v2.5';
-    const newProductionSnapshot: KnowledgeSnapshot = {
-      version: nextVer,
-      label: 'Production - Live',
-      state: 'production',
-      publishedAt: 'Just now',
-      publishedBy: 'Sajedur Rahman',
-      sourcesCount: sources.length,
-      totalChunks: sources.reduce((acc, s) => acc + s.recordChunksCount, 0),
-      changeSummary: summary,
-    };
-
-    setSnapshots((prev) => [
-      newProductionSnapshot,
-      ...prev.map((s) => (s.state === 'production' ? { ...s, state: 'archived' as const } : s)),
-    ]);
-
-    showToast(`Knowledge version ${nextVer} is now LIVE on Messenger & WhatsApp!`);
-  };
-
-  const handleRollback = (version: string) => {
-    setSnapshots((prev) =>
-      prev.map((s) => {
-        if (s.version === version) {
-          return { ...s, state: 'production' as const, label: `${version} (Restored Production)` };
-        }
-        if (s.state === 'production') {
-          return { ...s, state: 'archived' as const };
-        }
-        return s;
-      })
-    );
-    showToast(`Rolled back live knowledge base to ${version}`);
+    if (!sources.length) { showToast('Add a knowledge source before re-indexing'); return; }
+    Promise.all(sources.filter((source) => source.isActive).map((source) => api.post(`/knowledge/sources/${source.id}/reindex`, {})))
+      .then(() => { sourcesQ.reload(); jobsQ.reload(); showToast('Re-index queued for active sources'); })
+      .catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not queue re-index'));
   };
 
   // Subpage tabs configuration
@@ -295,13 +129,6 @@ export const KnowledgePage: React.FC = () => {
       label: 'Knowledge Sources',
       icon: Database,
       count: sources.length,
-      group: 'KNOWLEDGE BASE',
-    },
-    {
-      id: 'faqs' as KnowledgeTab,
-      label: 'FAQ Manager',
-      icon: HelpCircle,
-      count: faqs.length,
       group: 'KNOWLEDGE BASE',
     },
     {
@@ -330,21 +157,7 @@ export const KnowledgePage: React.FC = () => {
       icon: Cpu,
       badge: jobs.filter((j) => j.status === 'running').length > 0 ? 'Active' : undefined,
       badgeVariant: 'success' as const,
-      group: 'TRAINING & RELEASE',
-    },
-    {
-      id: 'testing' as KnowledgeTab,
-      label: 'Knowledge Testing',
-      icon: FlaskConical,
-      count: testCases.length,
-      group: 'TRAINING & RELEASE',
-    },
-    {
-      id: 'versions' as KnowledgeTab,
-      label: 'Versions & Release',
-      icon: GitBranch,
-      badge: 'v2.5-draft',
-      group: 'TRAINING & RELEASE',
+      group: 'TRAINING & TESTING',
     },
   ];
 
@@ -387,16 +200,6 @@ export const KnowledgePage: React.FC = () => {
             onAddSource={handleAddSource}
             onRefreshSource={handleRefreshSource}
             onDeleteSource={handleDeleteSource}
-            onToggleActive={handleToggleSourceActive}
-          />
-        )}
-
-        {activeTab === 'faqs' && (
-          <FaqManagerView
-            faqs={faqs}
-            onAddFaq={handleAddFaq}
-            onUpdateFaq={handleUpdateFaq}
-            onDeleteFaq={handleDeleteFaq}
           />
         )}
 
@@ -422,7 +225,7 @@ export const KnowledgePage: React.FC = () => {
         {activeTab === 'brand' && (
           <BrandIdentityView
             brandIdentity={brandIdentity}
-            onSave={setBrandIdentity}
+            onSave={(value) => api.put('/knowledge/brand', value).then(() => { setBrandIdentity(value); showToast('Brand identity saved'); }).catch((e: unknown) => showToast(e instanceof Error ? e.message : 'Could not save brand identity'))}
             onShowToast={showToast}
           />
         )}
@@ -436,21 +239,6 @@ export const KnowledgePage: React.FC = () => {
           />
         )}
 
-        {activeTab === 'testing' && (
-          <KnowledgeTestingView
-            testCases={testCases}
-            onAddTestCase={handleAddTestCase}
-            onUpdateVerdict={handleUpdateVerdict}
-          />
-        )}
-
-        {activeTab === 'versions' && (
-          <KnowledgeVersioningView
-            snapshots={snapshots}
-            onPublishStaging={handlePublishStaging}
-            onRollback={handleRollback}
-          />
-        )}
         </div>
       </div>
     </div>

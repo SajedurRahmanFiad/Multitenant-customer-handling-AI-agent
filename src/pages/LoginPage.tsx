@@ -1,53 +1,38 @@
 import React, { useState } from 'react';
-import { CurrentUser, DEMO_USERS } from '../types/auth';
-import { Lock, Phone, ArrowRight, ShieldCheck, CheckCircle2 } from 'lucide-react';
+import { DEMO_USERS } from '../types/auth';
+import { useAuth } from '../context/AuthContext';
+import { Lock, UserRound, ArrowRight, CheckCircle2, Loader2 } from 'lucide-react';
 
-interface LoginPageProps {
-  onLogin: (user: CurrentUser) => void;
-}
+const DEMO_PASSWORD = 'password123';
 
-export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
-  const [phone, setPhone] = useState('+880 1711-000001');
-  const [password, setPassword] = useState('password123');
-  const [error, setError] = useState<string | null>(null);
+export const LoginPage: React.FC = () => {
+  const { login, loggingIn, loginError } = useAuth();
+  const [identifier, setIdentifier] = useState('+880 1711-000001');
+  const [password, setPassword] = useState(DEMO_PASSWORD);
+  const [localError, setLocalError] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!phone.trim()) {
-      setError('Please enter your phone number');
+    if (!identifier.trim()) {
+      setLocalError('Please enter your email or phone number');
       return;
     }
     if (!password.trim()) {
-      setError('Please enter your password');
+      setLocalError('Please enter your password');
       return;
     }
-
-    // Match existing demo user or generate a default authenticated profile
-    const matched = DEMO_USERS.find(
-      (u) => u.phone.replace(/[\s-]/g, '') === phone.replace(/[\s-]/g, '')
-    );
-
-    if (matched) {
-      onLogin(matched);
-    } else {
-      // Default tenant admin user for write-in phone numbers
-      onLogin({
-        id: `usr_${Date.now()}`,
-        name: 'Workspace Member',
-        phone: phone.trim(),
-        role: 'admin',
-        tenantId: 'ten_loom_01',
-        tenantName: 'Bengal Loom & Crafts',
-      });
-    }
+    setLocalError(null);
+    await login(identifier.trim(), password);
   };
 
-  const handleSelectDemoUser = (user: CurrentUser) => {
-    setPhone(user.phone);
-    setPassword('demoPass2025');
-    setError(null);
-    onLogin(user);
+  const handleSelectDemoUser = async (demoPhone: string) => {
+    setIdentifier(demoPhone);
+    setPassword(DEMO_PASSWORD);
+    setLocalError(null);
+    await login(demoPhone, DEMO_PASSWORD);
   };
+
+  const error = localError ?? loginError;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col justify-center items-center px-4 py-12">
@@ -87,27 +72,27 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
 
           {/* Form with strictly two fields: Phone and Password */}
           <form onSubmit={handleSubmit} className="space-y-4">
-            {/* Field 1: Phone */}
+            {/* Field 1: Email or phone */}
             <div className="space-y-1.5">
               <label
-                htmlFor="phone"
+                htmlFor="identifier"
                 className="block text-xs font-semibold text-slate-700"
               >
-                Phone Number
+                Email or Phone Number
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
-                  <Phone className="w-4 h-4" />
+                  <UserRound className="w-4 h-4" />
                 </div>
                 <input
-                  id="phone"
-                  name="phone"
-                  type="tel"
-                  autoComplete="tel"
+                  id="identifier"
+                  name="identifier"
+                  type="text"
+                  autoComplete="username"
                   required
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  placeholder="+880 1711-000000"
+                  value={identifier}
+                  onChange={(e) => setIdentifier(e.target.value)}
+                  placeholder="Email address or phone number"
                   className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-2xl text-xs text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-colors"
                 />
               </div>
@@ -142,10 +127,20 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
             {/* Submit Button */}
             <button
               type="submit"
-              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white font-semibold text-xs rounded-2xl shadow-sm transition-all duration-200 hover:shadow"
+              disabled={loggingIn}
+              className="w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 disabled:opacity-60 text-white font-semibold text-xs rounded-2xl shadow-sm transition-all duration-200 hover:shadow"
             >
-              <span>Sign In</span>
-              <ArrowRight className="w-4 h-4" />
+              {loggingIn ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <span>Signing In…</span>
+                </>
+              ) : (
+                <>
+                  <span>Sign In</span>
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
             </button>
           </form>
 
@@ -163,8 +158,9 @@ export const LoginPage: React.FC<LoginPageProps> = ({ onLogin }) => {
                 <button
                   key={demo.id}
                   type="button"
-                  onClick={() => handleSelectDemoUser(demo)}
-                  className="w-full flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-2xl text-left transition-colors"
+                  disabled={loggingIn}
+                  onClick={() => void handleSelectDemoUser(demo.phone)}
+                  className="w-full flex items-center justify-between p-2.5 bg-slate-50 hover:bg-slate-100/80 border border-slate-200 rounded-2xl text-left transition-colors disabled:opacity-60"
                 >
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-slate-900 flex items-center gap-1.5">

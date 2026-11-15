@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { X, ArrowRightLeft, Users } from 'lucide-react';
+import { useApiData } from '../../hooks/useApiData';
 
 interface TransferTeamModalProps {
   isOpen: boolean;
@@ -7,22 +8,6 @@ interface TransferTeamModalProps {
   currentTeam?: string;
   onTransfer: (team: string, staff: string | null, note: string) => void;
 }
-
-const TEAMS = [
-  'Returns & Claims',
-  'Finance & Payments',
-  'Logistics & Courier',
-  'Sales Escalation',
-  'General Support',
-];
-
-const STAFF_MEMBERS: Record<string, string[]> = {
-  'Returns & Claims': ['Rafiq Islam', 'Tanvir Ahmed'],
-  'Finance & Payments': ['Sajedur Rahman', 'Nusrat Jahan'],
-  'Logistics & Courier': ['Kamal Hossain', 'Rafiq Islam'],
-  'Sales Escalation': ['Nusrat Jahan', 'Farzana Akter'],
-  'General Support': ['Rafiq Islam', 'Nusrat Jahan', 'Sajedur Rahman'],
-};
 
 export const TransferTeamModal: React.FC<TransferTeamModalProps> = ({
   isOpen,
@@ -33,6 +18,13 @@ export const TransferTeamModal: React.FC<TransferTeamModalProps> = ({
   const [selectedTeam, setSelectedTeam] = useState(currentTeam);
   const [selectedStaff, setSelectedStaff] = useState<string>('Unassigned');
   const [transferNote, setTransferNote] = useState('');
+  const teamsQ = useApiData<{ teams: Array<{ id: string; name: string }> }>('/team/teams');
+  const membersQ = useApiData<{ members: Array<{ id: string; name: string }> }>('/team/members');
+  const teams = teamsQ.data?.teams ?? [];
+  const members = membersQ.data?.members ?? [];
+  useEffect(() => {
+    if (teams.length && !teams.some((team) => team.name === selectedTeam)) setSelectedTeam(teams[0].name);
+  }, [teams, selectedTeam]);
 
   if (!isOpen) return null;
 
@@ -45,8 +37,6 @@ export const TransferTeamModal: React.FC<TransferTeamModalProps> = ({
     );
     onClose();
   };
-
-  const availableStaff = STAFF_MEMBERS[selectedTeam] || [];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
@@ -76,22 +66,22 @@ export const TransferTeamModal: React.FC<TransferTeamModalProps> = ({
               Select Department / Team
             </label>
             <div className="space-y-1.5">
-              {TEAMS.map((team) => (
+              {teams.map((team) => (
                 <button
-                  key={team}
+                  key={team.id}
                   type="button"
                   onClick={() => {
-                    setSelectedTeam(team);
+                    setSelectedTeam(team.name);
                     setSelectedStaff('Unassigned');
                   }}
                   className={`w-full p-2.5 text-xs font-medium rounded-xl border text-left flex items-center justify-between transition-colors ${
-                    selectedTeam === team
+                    selectedTeam === team.name
                       ? 'border-slate-900 bg-slate-900 text-white'
                       : 'border-slate-200 bg-slate-50 text-slate-700 hover:bg-slate-100'
                   }`}
                 >
-                  <span>{team}</span>
-                  {selectedTeam === team && (
+                  <span>{team.name}</span>
+                  {selectedTeam === team.name && (
                     <span className="text-[10px] text-slate-300 font-mono">Active Target</span>
                   )}
                 </button>
@@ -109,9 +99,9 @@ export const TransferTeamModal: React.FC<TransferTeamModalProps> = ({
               className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:bg-white text-slate-900"
             >
               <option value="Unassigned">Leave unassigned in team queue</option>
-              {availableStaff.map((staff) => (
-                <option key={staff} value={staff}>
-                  {staff}
+              {members.map((staff) => (
+                <option key={staff.id} value={staff.name}>
+                  {staff.name}
                 </option>
               ))}
             </select>

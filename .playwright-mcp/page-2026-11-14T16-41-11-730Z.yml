@@ -1,0 +1,47 @@
+- generic [ref=f1e6]:
+  - generic [ref=f1e7]:
+    - heading "Sign in to Support API" [level=2] [ref=f1e13]
+    - paragraph [ref=f1e14]: Multi-Tenant Conversational AI & Agent Platform
+  - generic [ref=f1e15]:
+    - generic [ref=f1e16]:
+      - generic [ref=f1e17]:
+        - generic [ref=f1e18]: Phone Number
+        - textbox "Phone Number" [ref=f1e20]:
+          - /placeholder: +880 1711-000000
+          - text: +880 1711-000001
+      - generic [ref=f1e21]:
+        - generic [ref=f1e22]: Password
+        - textbox "Password" [ref=f1e24]:
+          - /placeholder: ••••••••
+          - text: password123
+      - button "Sign In" [ref=f1e25]
+    - generic [ref=f1e29]:
+      - generic [ref=f1e30]:
+        - generic [ref=f1e31]: Quick Demo Switcher
+        - generic [ref=f1e32]: 1-click login
+      - generic [ref=f1e33]:
+        - button "Sajedur Rahman super admin Bengal Loom & Crafts · +880 1711-000001" [ref=f1e34]:
+          - generic [ref=f1e35]:
+            - generic [ref=f1e36]:
+              - text: Sajedur Rahman
+              - generic [ref=f1e37]: super admin
+            - generic [ref=f1e38]: Bengal Loom & Crafts · +880 1711-000001
+        - button "Rafiq Islam admin Bengal Loom & Crafts · +880 1712-984210" [ref=f1e42]:
+          - generic [ref=f1e43]:
+            - generic [ref=f1e44]:
+              - text: Rafiq Islam
+              - generic [ref=f1e45]: admin
+            - generic [ref=f1e46]: Bengal Loom & Crafts · +880 1712-984210
+        - button "Anika Tabassum agent Bengal Loom & Crafts · +880 1713-445566" [ref=f1e50]:
+          - generic [ref=f1e51]:
+            - generic [ref=f1e52]:
+              - text: Anika Tabassum
+              - generic [ref=f1e53]: agent
+            - generic [ref=f1e54]: Bengal Loom & Crafts · +880 1713-445566
+        - button "Mushfiqur Rahman admin Gadget Express BD · +880 1819-204918" [ref=f1e58]:
+          - generic [ref=f1e59]:
+            - generic [ref=f1e60]:
+              - text: Mushfiqur Rahman
+              - generic [ref=f1e61]: admin
+            - generic [ref=f1e62]: Gadget Express BD · +880 1819-204918
+  - generic [ref=f1e66]: Enterprise Multi-Tenant Isolation & Role-Based Access Control

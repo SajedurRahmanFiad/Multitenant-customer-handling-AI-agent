@@ -1,0 +1,12 @@
+- generic [ref=e67]:
+  - banner [ref=e68]:
+    - generic [ref=e69]:
+      - generic [ref=e70]: S
+      - generic [ref=e71]:
+        - generic [ref=e72]: Support API
+        - generic [ref=e73]: Overview
+    - button "Open navigation" [ref=e74]
+  - main [ref=e77]:
+    - generic [ref=e78]:
+      - heading "Select a specific tenant" [level=2] [ref=e79]
+      - paragraph [ref=e80]: Choose a tenant from the sidebar to view this page.

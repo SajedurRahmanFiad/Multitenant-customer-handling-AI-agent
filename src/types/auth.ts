@@ -16,8 +16,8 @@ export const DEMO_USERS: CurrentUser[] = [
     name: 'Sajedur Rahman',
     phone: '+880 1711-000001',
     role: 'super_admin',
-    tenantId: 'ten_loom_01',
-    tenantName: 'Bengal Loom & Crafts',
+    tenantId: 'all',
+    tenantName: 'Platform',
   },
   {
     id: 'usr_02',

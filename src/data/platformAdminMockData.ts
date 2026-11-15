@@ -1,13 +1,8 @@
 import {
   TenantClient,
   AIProviderModel,
-  PlatformFinancialMetrics,
-  TopSpendingTenant,
   QueueMetrics,
   DeadLetterJob,
-  SystemComponentHealth,
-  SystemIncident,
-  SecurityComplianceReport,
   GlobalPipelineLayer,
 } from '../types/platformAdmin';
 
@@ -147,7 +142,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'gemini-2.5-flash',
     displayName: 'Google Gemini 2.5 Flash',
     provider: 'Google Gemini',
-    secretReference: 'vault://gcp-kms/gemini-prod-key-v2',
+    apiKey: '',
     endpointUrl: 'https://generativelanguage.googleapis.com/v1beta',
     capabilities: ['text', 'vision', 'tools', 'json'],
     costPerMillionInputUSD: 0.075,
@@ -165,7 +160,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'gpt-4o-mini',
     displayName: 'OpenAI GPT-4o Mini',
     provider: 'OpenAI',
-    secretReference: 'vault://azure-keyvault/openai-prod-master',
+    apiKey: '',
     endpointUrl: 'https://api.openai.com/v1/chat/completions',
     capabilities: ['text', 'vision', 'tools', 'json'],
     costPerMillionInputUSD: 0.15,
@@ -183,7 +178,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'claude-3-5-sonnet-20241022',
     displayName: 'Anthropic Claude 3.5 Sonnet',
     provider: 'Anthropic',
-    secretReference: 'vault://aws-secrets/anthropic-production-key',
+    apiKey: '',
     endpointUrl: 'https://api.anthropic.com/v1/messages',
     capabilities: ['text', 'vision', 'tools', 'json'],
     costPerMillionInputUSD: 3.00,
@@ -201,7 +196,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'llama-3.3-70b-versatile',
     displayName: 'Llama 3.3 70B (Groq Ultra-Fast)',
     provider: 'Groq / Llama',
-    secretReference: 'vault://gcp-kms/groq-prod-cluster',
+    apiKey: '',
     endpointUrl: 'https://api.groq.com/openai/v1/chat/completions',
     capabilities: ['text', 'tools', 'json'],
     costPerMillionInputUSD: 0.59,
@@ -219,7 +214,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'text-embedding-004',
     displayName: 'Google Gemini Embedding 004',
     provider: 'Google Gemini',
-    secretReference: 'vault://gcp-kms/gemini-prod-key-v2',
+    apiKey: '',
     endpointUrl: 'https://generativelanguage.googleapis.com/v1beta',
     capabilities: ['embeddings'],
     costPerMillionInputUSD: 0.025,
@@ -237,7 +232,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'whisper-large-v3',
     displayName: 'OpenAI Whisper v3 Large (Audio/STT)',
     provider: 'OpenAI',
-    secretReference: 'vault://azure-keyvault/openai-prod-master',
+    apiKey: '',
     endpointUrl: 'https://api.openai.com/v1/audio/transcriptions',
     capabilities: ['text', 'tools', 'json'],
     costPerMillionInputUSD: 0.36,
@@ -255,7 +250,7 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     modelId: 'gemini-2.5-pro',
     displayName: 'Google Gemini 2.5 Pro (Deep Context)',
     provider: 'Google Gemini',
-    secretReference: 'vault://gcp-kms/gemini-prod-key-v2',
+    apiKey: '',
     endpointUrl: 'https://generativelanguage.googleapis.com/v1beta',
     capabilities: ['text', 'vision', 'tools', 'json'],
     costPerMillionInputUSD: 1.25,
@@ -267,51 +262,6 @@ export const INITIAL_PROVIDER_MODELS: AIProviderModel[] = [
     status: 'active',
     isDefault: false,
     isFallback: false,
-  },
-];
-
-export const INITIAL_PLATFORM_METRICS: PlatformFinancialMetrics = {
-  totalMonthlyRevenueUSD: 18450.00,
-  totalMonthlyProviderCostUSD: 4120.35,
-  grossMarginPercent: 77.6,
-  totalTokensConsumed24h: 38491020,
-  currentBurnRateTokensPerSec: 445,
-  averageCostPerConversationUSD: 0.0031,
-  anomalyProtectionPolicy: 'switch_to_fallback',
-};
-
-export const INITIAL_TOP_TENANTS: TopSpendingTenant[] = [
-  {
-    tenantId: 'ten_med_04',
-    businessName: 'Dhaka Pharma & Care',
-    primaryModel: 'claude-3-5-sonnet',
-    spendUSD: 245.60,
-    tokenCount: 14200000,
-    conversationsCount: 61200,
-  },
-  {
-    tenantId: 'ten_gadget_02',
-    businessName: 'Gadget Express BD',
-    primaryModel: 'gpt-4o-mini',
-    spendUSD: 112.80,
-    tokenCount: 8400000,
-    conversationsCount: 34100,
-  },
-  {
-    tenantId: 'ten_loom_01',
-    businessName: 'Bengal Loom & Crafts',
-    primaryModel: 'gemini-2.5-flash',
-    spendUSD: 38.42,
-    tokenCount: 3100000,
-    conversationsCount: 12480,
-  },
-  {
-    tenantId: 'ten_cloud_03',
-    businessName: 'Aarong Handcrafts Reseller',
-    primaryModel: 'gemini-2.5-flash',
-    spendUSD: 14.20,
-    tokenCount: 920000,
-    conversationsCount: 2840,
   },
 ];
 
@@ -365,102 +315,6 @@ export const INITIAL_DEAD_LETTER_JOBS: DeadLetterJob[] = [
   },
 ];
 
-export const INITIAL_SYSTEM_COMPONENTS: SystemComponentHealth[] = [
-  {
-    name: 'Public Webhook Gateway (Meta Graph & Cloud API)',
-    type: 'core',
-    status: 'operational',
-    uptime90dPercent: 99.99,
-    latencyMs: 38,
-  },
-  {
-    name: 'Real-time Inbox WebSockets & PubSub',
-    type: 'core',
-    status: 'operational',
-    uptime90dPercent: 100.0,
-    latencyMs: 18,
-  },
-  {
-    name: 'AI Model Orchestrator & Token Rate Limiter',
-    type: 'core',
-    status: 'operational',
-    uptime90dPercent: 99.96,
-    latencyMs: 540,
-  },
-  {
-    name: 'PostgreSQL Relational Storage (Row Level Isolation)',
-    type: 'storage',
-    status: 'operational',
-    uptime90dPercent: 100.0,
-    latencyMs: 2.1,
-  },
-  {
-    name: 'Redis Cache & Distributed Job Queues',
-    type: 'storage',
-    status: 'operational',
-    uptime90dPercent: 100.0,
-    latencyMs: 0.9,
-  },
-  {
-    name: 'Vector Database & Embedding Retrieval',
-    type: 'storage',
-    status: 'operational',
-    uptime90dPercent: 99.98,
-    latencyMs: 64,
-  },
-  {
-    name: 'Google Gemini API Services',
-    type: 'external',
-    status: 'operational',
-    uptime90dPercent: 99.97,
-    latencyMs: 580,
-  },
-  {
-    name: 'Meta Graph & WhatsApp Cloud API',
-    type: 'external',
-    status: 'operational',
-    uptime90dPercent: 99.92,
-    latencyMs: 120,
-  },
-];
-
-export const INITIAL_INCIDENTS: SystemIncident[] = [
-  {
-    id: 'inc_01',
-    title: 'Intermittent 429 Rate Limits from OpenAI Endpoint',
-    severity: 'p3_minor',
-    status: 'resolved',
-    affectedComponents: ['AI Model Orchestrator'],
-    startedAt: 'Oct 26, 2026 at 10:14 AM',
-    resolvedAt: 'Oct 26, 2026 at 10:28 AM',
-    summary: 'Automated fallback to Gemini 2.5 Flash triggered smoothly. Zero customer messages dropped.',
-  },
-  {
-    id: 'inc_02',
-    title: 'Meta Graph Webhook Certificate Renewal',
-    severity: 'p3_minor',
-    status: 'resolved',
-    affectedComponents: ['Public Webhook Gateway'],
-    startedAt: 'Oct 20, 2026 at 03:00 AM',
-    resolvedAt: 'Oct 20, 2026 at 03:08 AM',
-    summary: 'Scheduled TLS certificate rotation completed during maintenance window.',
-  },
-];
-
-export const INITIAL_COMPLIANCE_REPORT: SecurityComplianceReport = {
-  lastIsolationAudit: 'Today at 04:00 AM (Automated Canary)',
-  isolationStatus: 'passing',
-  kmsKeyRotationAgeDays: 24,
-  nextRotationScheduled: 'In 36 days',
-  gdprPendingErasuresCount: 0,
-  gdprCompletedErasuresCount: 18,
-  soc2AuditExportReady: true,
-  backupStatus: 'healthy',
-  lastDisasterRecoveryTest: 'Oct 25, 2026 at 02:00 AM',
-  disasterRecoveryTestOutcome: 'pass',
-  rpoMinutes: 3,
-  rtoMinutes: 12,
-};
 
 export const INITIAL_GLOBAL_PIPELINE_LAYERS: GlobalPipelineLayer[] = [
   {

@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { SubPageNav, SubPageTabItem } from '../components/navigation/SubPageNav';
+import { useUrlQueryState } from '../hooks/useUrlQueryState';
 import {
   TeamMember,
   UserSession,
@@ -10,6 +11,8 @@ import {
 } from '../types/team';
 import { CurrentUser } from '../types/auth';
 import { TenantClient } from '../types/platformAdmin';
+import { MessengerConnection, WhatsAppConnection } from '../types/channels';
+import { useApiData } from '../hooks/useApiData';
 import {
   Users,
   UserPlus,
@@ -18,7 +21,6 @@ import {
   Laptop,
   Smartphone,
   Trash2,
-  CheckCircle2,
   Lock,
   Eye,
   Check,
@@ -26,9 +28,18 @@ import {
   Phone,
   Building2,
   Filter,
+  Pencil,
 } from 'lucide-react';
 
 export type TeamSubTabId = 'members' | 'matrix' | 'sessions' | 'history';
+type EditableTeamMember = Pick<TeamMember, 'name' | 'phone' | 'role' | 'assignedChannels'>;
+type EditingTeamMember = {
+  id: string;
+  tenantId: string;
+  draft: EditableTeamMember;
+  isSuperAdmin: boolean;
+  password: string;
+};
 
 interface TeamPageProps {
   currentUser: CurrentUser;
@@ -38,8 +49,10 @@ interface TeamPageProps {
   sessions: UserSession[];
   adminActions: AdminActionRecord[];
   onInviteMember: (newMember: Omit<TeamMember, 'id' | 'joinedAt'>) => void;
-  onUpdateRole: (memberId: string, newRole: TeamRole) => void;
-  onRevokeSession: (sessionId: string) => void;
+  onUpdateMember: (memberId: string, updates: EditableTeamMember, tenantId?: string) => void;
+  onUpdateSuperAdmin: (updates: { name: string; phone: string; password?: string }) => Promise<void>;
+  onDeleteMember: (memberId: string, tenantId?: string) => void;
+  onRevokeSession: (sessionId: string, tenantId?: string) => void;
   onRevokeAllSessions: () => void;
 }
 
@@ -51,12 +64,18 @@ export const TeamPage: React.FC<TeamPageProps> = ({
   sessions,
   adminActions,
   onInviteMember,
-  onUpdateRole,
+  onUpdateMember,
+  onUpdateSuperAdmin,
+  onDeleteMember,
   onRevokeSession,
   onRevokeAllSessions,
 }) => {
-  const [activeTab, setActiveTab] = useState<TeamSubTabId>('members');
+  const [activeTab, setActiveTab] = useUrlQueryState<TeamSubTabId>('tab', 'members', [
+    'members', 'matrix', 'sessions', 'history',
+  ]);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [editingMember, setEditingMember] = useState<EditingTeamMember | null>(null);
+  const [memberToDelete, setMemberToDelete] = useState<TeamMember | null>(null);
   const [selectedRoleForMatrix, setSelectedRoleForMatrix] = useState<TeamRole>('agent');
 
   // Multi-tenant scoped members calculation
@@ -73,6 +92,24 @@ export const TeamPage: React.FC<TeamPageProps> = ({
     }
     return members.filter((m) => m.tenantId === selectedTenantId);
   }, [members, isSuperAdmin, currentUser.tenantId, selectedTenantId]);
+
+  const listedMembers = useMemo(() => {
+    if (!isSuperAdmin) return scopedMembers;
+    const superAdminMember: TeamMember = {
+      id: currentUser.id,
+      name: currentUser.name,
+      phone: currentUser.phone,
+      tenantId: currentUser.tenantId,
+      tenantName: 'Platform',
+      role: 'super_admin',
+      assignedChannels: [],
+      status: 'active',
+      twoFactorEnabled: false,
+      lastActive: 'Current account',
+      joinedAt: '',
+    };
+    return [superAdminMember, ...scopedMembers.filter((member) => member.id !== currentUser.id)];
+  }, [scopedMembers, isSuperAdmin, currentUser.id, currentUser.name, currentUser.phone, currentUser.tenantId]);
 
   const scopedSessions = useMemo(() => {
     if (!isSuperAdmin) {
@@ -108,11 +145,10 @@ export const TeamPage: React.FC<TeamPageProps> = ({
     isSuperAdmin && selectedTenantId !== 'all' ? selectedTenantId : currentUser.tenantId
   );
   const [inviteRole, setInviteRole] = useState<TeamRole>('agent');
-  const [inviteDept, setInviteDept] = useState('Customer Support');
-  const [inviteChannels, setInviteChannels] = useState<('messenger' | 'whatsapp')[]>([
-    'messenger',
-    'whatsapp',
-  ]);
+  const messengerConnectionQ = useApiData<{ connection: MessengerConnection | null }>('/channels/messenger');
+  const whatsappConnectionQ = useApiData<{ connection: WhatsAppConnection | null }>('/channels/whatsapp');
+  const connectedMessenger = messengerConnectionQ.data?.connection?.status === 'connected';
+  const connectedWhatsApp = whatsappConnectionQ.data?.connection?.status === 'connected';
 
   const handleCreateInvite = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,8 +166,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({
       tenantId: assignedTenant.id,
       tenantName: assignedTenant.businessName,
       role: inviteRole,
-      department: inviteDept.trim(),
-      assignedChannels: inviteChannels,
+      assignedChannels: [],
       status: 'invited',
       twoFactorEnabled: false,
       lastActive: 'Invitation sent just now',
@@ -140,6 +175,32 @@ export const TeamPage: React.FC<TeamPageProps> = ({
     setInviteName('');
     setInvitePhone('+880 17');
     setIsInviteModalOpen(false);
+  };
+
+  const handleSaveMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingMember || !editingMember.draft.name.trim() || !editingMember.draft.phone.trim()) return;
+    const updates = {
+      ...editingMember.draft,
+      name: editingMember.draft.name.trim(),
+      phone: editingMember.draft.phone.trim(),
+    };
+    if (editingMember.isSuperAdmin) {
+      await onUpdateSuperAdmin({
+        name: updates.name,
+        phone: updates.phone,
+        ...(editingMember.password ? { password: editingMember.password } : {}),
+      });
+    } else {
+      onUpdateMember(editingMember.id, updates, editingMember.tenantId);
+    }
+    setEditingMember(null);
+  };
+
+  const handleDeleteMember = () => {
+    if (!memberToDelete) return;
+    onDeleteMember(memberToDelete.id, memberToDelete.tenantId);
+    setMemberToDelete(null);
   };
 
   const getRoleBadge = (role: TeamRole) => {
@@ -176,7 +237,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({
       id: 'members',
       label: 'Team Members',
       icon: Users,
-      count: scopedMembers.length,
+      count: listedMembers.length,
       group: 'WORKSPACE',
     },
     {
@@ -221,7 +282,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-slate-900">{activeTenantName}</span>
                 <span className="text-[10px] px-2 py-0.2 rounded-full font-semibold bg-slate-100 text-slate-700">
-                  {scopedMembers.length} active member{scopedMembers.length !== 1 ? 's' : ''}
+                  {listedMembers.length} active member{listedMembers.length !== 1 ? 's' : ''}
                 </span>
               </div>
               <p className="text-[11px] text-slate-500">
@@ -263,14 +324,13 @@ export const TeamPage: React.FC<TeamPageProps> = ({
                     <th className="px-5 py-3">Member</th>
                     <th className="px-5 py-3">Tenant</th>
                     <th className="px-5 py-3">Role</th>
-                    <th className="px-5 py-3">Department</th>
                     <th className="px-5 py-3">Channels</th>
-                    <th className="px-5 py-3">Security & Status</th>
+                    <th className="px-5 py-3">Last seen</th>
                     <th className="px-5 py-3 text-right">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {scopedMembers.map((member) => (
+                  {listedMembers.map((member) => (
                     <tr key={member.id} className="hover:bg-slate-50/60 transition-colors">
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-3">
@@ -279,7 +339,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({
                           </div>
                           <div className="flex flex-col">
                             <span className="font-semibold text-slate-900">{member.name}</span>
-                            <span className="text-[11px] text-slate-500 font-mono flex items-center gap-1">
+                            <span className="text-[11px] text-slate-500 font-mono flex items-center gap-1 whitespace-nowrap">
                               <Phone className="w-3 h-3 text-slate-400" />
                               {member.phone}
                             </span>
@@ -293,64 +353,66 @@ export const TeamPage: React.FC<TeamPageProps> = ({
                         </span>
                       </td>
                       <td className="px-5 py-3.5">{getRoleBadge(member.role)}</td>
-                      <td className="px-5 py-3.5 text-slate-700 font-medium">
-                        {member.department}
-                      </td>
                       <td className="px-5 py-3.5">
                         <div className="flex items-center gap-1.5">
-                          {member.assignedChannels.includes('messenger') && (
-                            <span className="px-2 py-0.5 rounded bg-blue-50 text-blue-700 text-[10px] font-semibold border border-blue-200">
-                              Messenger
-                            </span>
+                          {connectedMessenger && (
+                            <img
+                              src="/uploads/messenger.png"
+                              alt="Messenger"
+                              title="Messenger"
+                              className="w-5 h-5 shrink-0 object-contain"
+                            />
                           )}
-                          {member.assignedChannels.includes('whatsapp') && (
-                            <span className="px-2 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[10px] font-semibold border border-emerald-200">
-                              WhatsApp
-                            </span>
+                          {connectedWhatsApp && (
+                            <img
+                              src="/uploads/whatsapp.png"
+                              alt="WhatsApp"
+                              title="WhatsApp"
+                              className="w-5 h-5 shrink-0 object-contain"
+                            />
+                          )}
+                          {!connectedMessenger && !connectedWhatsApp && (
+                            <span className="text-[11px] text-slate-400">None connected</span>
                           )}
                         </div>
                       </td>
-                      <td className="px-5 py-3.5">
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <span
-                              className={`w-2 h-2 rounded-full ${
-                                member.status === 'active'
-                                  ? 'bg-emerald-500 ring-2 ring-emerald-500/20'
-                                  : member.status === 'invited'
-                                  ? 'bg-amber-500 ring-2 ring-amber-500/20'
-                                  : 'bg-red-500'
-                              }`}
-                            />
-                            <span className="font-medium text-slate-700 capitalize">
-                              {member.status}
-                            </span>
-                          </div>
-                          <div className="flex items-center gap-1.5 text-[10px] text-slate-500">
-                            {member.twoFactorEnabled ? (
-                              <span className="text-emerald-600 font-medium flex items-center gap-0.5">
-                                <CheckCircle2 className="w-3 h-3" /> 2FA Active
-                              </span>
-                            ) : (
-                              <span className="text-slate-400">2FA Off</span>
-                            )}
-                            <span>·</span>
-                            <span>{member.lastActive}</span>
-                          </div>
-                        </div>
+                      <td className="px-5 py-3.5 text-slate-600 whitespace-nowrap">
+                        {member.lastActive}
                       </td>
                       <td className="px-5 py-3.5 text-right">
-                        <select
-                          value={member.role}
-                          onChange={(e) => onUpdateRole(member.id, e.target.value as TeamRole)}
-                          disabled={member.role === 'super_admin' || !isSuperAdmin && member.id === currentUser.id}
-                          className="text-xs bg-white border border-slate-200 rounded-lg px-2 py-1 text-slate-700 focus:outline-none focus:ring-1 focus:ring-slate-900 disabled:opacity-50 disabled:bg-slate-50"
-                        >
-                          {isSuperAdmin && <option value="super_admin">Super Admin</option>}
-                          <option value="admin">Administrator</option>
-                          <option value="agent">Support Agent</option>
-                          <option value="analyst">Analyst</option>
-                        </select>
+                        <div className="flex items-center justify-end gap-1">
+                          <button
+                            type="button"
+                            onClick={() => setEditingMember({
+                              id: member.id,
+                              tenantId: member.tenantId,
+                              isSuperAdmin: member.role === 'super_admin' && member.id === currentUser.id,
+                              password: '',
+                              draft: {
+                                name: member.name,
+                                phone: member.phone,
+                                role: member.role,
+                                assignedChannels: [...member.assignedChannels],
+                              },
+                            })}
+                            disabled={member.role === 'super_admin' && member.id !== currentUser.id || !isSuperAdmin && member.id === currentUser.id}
+                            title={`Edit ${member.name}`}
+                            aria-label={`Edit ${member.name}`}
+                            className="p-1.5 rounded-lg text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setMemberToDelete(member)}
+                            disabled={member.role === 'super_admin' || !isSuperAdmin && member.id === currentUser.id}
+                            title={`Delete ${member.name}`}
+                            aria-label={`Delete ${member.name}`}
+                            className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 hover:text-rose-700 disabled:opacity-40 disabled:cursor-not-allowed"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))}
@@ -469,6 +531,8 @@ export const TeamPage: React.FC<TeamPageProps> = ({
               <button
                 type="button"
                 onClick={onRevokeAllSessions}
+                disabled={selectedTenantId === 'all'}
+                title={selectedTenantId === 'all' ? 'Select a tenant to revoke other sessions' : undefined}
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 border border-red-200 transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -511,7 +575,7 @@ export const TeamPage: React.FC<TeamPageProps> = ({
                   {!sess.isCurrentSession && (
                     <button
                       type="button"
-                      onClick={() => onRevokeSession(sess.id)}
+                      onClick={() => onRevokeSession(sess.id, sess.tenantId)}
                       className="self-end sm:self-center px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                     >
                       Revoke
@@ -633,61 +697,17 @@ export const TeamPage: React.FC<TeamPageProps> = ({
                   )}
                 </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Role</label>
-                    <select
-                      value={inviteRole}
-                      onChange={(e) => setInviteRole(e.target.value as TeamRole)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white"
-                    >
-                      <option value="agent">Support Agent</option>
-                      <option value="analyst">Analyst</option>
-                      <option value="admin">Administrator</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block font-semibold text-slate-700 mb-1">Department</label>
-                    <input
-                      type="text"
-                      value={inviteDept}
-                      onChange={(e) => setInviteDept(e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900"
-                    />
-                  </div>
-                </div>
-
                 <div>
-                  <label className="block font-semibold text-slate-700 mb-1.5">
-                    Assigned Conversation Channels
-                  </label>
-                  <div className="flex items-center gap-4">
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inviteChannels.includes('messenger')}
-                        onChange={(e) => {
-                          if (e.target.checked) setInviteChannels([...inviteChannels, 'messenger']);
-                          else setInviteChannels(inviteChannels.filter((c) => c !== 'messenger'));
-                        }}
-                        className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                      />
-                      <span className="font-medium text-slate-700">Facebook Messenger</span>
-                    </label>
-                    <label className="flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={inviteChannels.includes('whatsapp')}
-                        onChange={(e) => {
-                          if (e.target.checked) setInviteChannels([...inviteChannels, 'whatsapp']);
-                          else setInviteChannels(inviteChannels.filter((c) => c !== 'whatsapp'));
-                        }}
-                        className="rounded border-slate-300 text-slate-900 focus:ring-slate-900"
-                      />
-                      <span className="font-medium text-slate-700">WhatsApp Business</span>
-                    </label>
-                  </div>
+                  <label className="block font-semibold text-slate-700 mb-1">Role</label>
+                  <select
+                    value={inviteRole}
+                    onChange={(e) => setInviteRole(e.target.value as TeamRole)}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:outline-none focus:ring-1 focus:ring-slate-900 bg-white"
+                  >
+                    <option value="agent">Support Agent</option>
+                    <option value="analyst">Analyst</option>
+                    <option value="admin">Administrator</option>
+                  </select>
                 </div>
 
                 <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -706,6 +726,87 @@ export const TeamPage: React.FC<TeamPageProps> = ({
                   </button>
                 </div>
               </form>
+            </div>
+          </div>
+        )}
+
+        {editingMember && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+            <form onSubmit={handleSaveMember} className="w-full max-w-md bg-white rounded-2xl border border-slate-200 p-6 shadow-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold text-slate-900">
+                  {editingMember.isSuperAdmin ? 'Edit Super Admin' : 'Edit Team Member'}
+                </h3>
+                <button type="button" onClick={() => setEditingMember(null)} aria-label="Close edit dialog" className="p-1 text-slate-400 hover:text-slate-700">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+
+              <label className="block text-xs font-semibold text-slate-700">
+                Name
+                <input
+                  required
+                  value={editingMember.draft.name}
+                  onChange={(e) => setEditingMember((previous) => previous ? { ...previous, draft: { ...previous.draft, name: e.target.value } } : previous)}
+                  className="mt-1 w-full px-3 py-2 border border-slate-200 rounded-xl font-normal"
+                />
+              </label>
+              <label className="block text-xs font-semibold text-slate-700">
+                Phone
+                <input
+                  required
+                  value={editingMember.draft.phone}
+                  onChange={(e) => setEditingMember((previous) => previous ? { ...previous, draft: { ...previous.draft, phone: e.target.value } } : previous)}
+                  className="mt-1 w-full px-3 py-2 border border-slate-200 rounded-xl font-normal"
+                />
+              </label>
+              {editingMember.isSuperAdmin ? (
+                <label className="block text-xs font-semibold text-slate-700">
+                  New Password
+                  <input
+                    type="password"
+                    minLength={8}
+                    autoComplete="new-password"
+                    value={editingMember.password}
+                    onChange={(e) => setEditingMember((previous) => previous ? { ...previous, password: e.target.value } : previous)}
+                    placeholder="Leave blank to keep current password"
+                    className="mt-1 w-full px-3 py-2 border border-slate-200 rounded-xl font-normal"
+                  />
+                </label>
+              ) : (
+                <>
+                  <label className="block text-xs font-semibold text-slate-700">
+                    Role
+                    <select
+                      value={editingMember.draft.role}
+                      onChange={(e) => setEditingMember((previous) => previous ? { ...previous, draft: { ...previous.draft, role: e.target.value as TeamRole } } : previous)}
+                      className="mt-1 w-full px-3 py-2 border border-slate-200 rounded-xl font-normal bg-white"
+                    >
+                      {isSuperAdmin && <option value="super_admin">Super Admin</option>}
+                      <option value="admin">Administrator</option>
+                      <option value="agent">Support Agent</option>
+                      <option value="analyst">Analyst</option>
+                    </select>
+                  </label>
+                </>
+              )}
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onClick={() => setEditingMember(null)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button type="submit" className="px-3 py-2 text-xs font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-lg">Save Changes</button>
+              </div>
+            </form>
+          </div>
+        )}
+
+        {memberToDelete && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs">
+            <div className="w-full max-w-sm bg-white rounded-2xl border border-slate-200 p-6 shadow-xl space-y-4">
+              <h3 className="text-sm font-bold text-slate-900">Delete team member?</h3>
+              <p className="text-xs text-slate-600">{memberToDelete.name} will be removed from the team.</p>
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+                <button type="button" onClick={() => setMemberToDelete(null)} className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button type="button" onClick={handleDeleteMember} className="px-3 py-2 text-xs font-semibold text-white bg-rose-600 hover:bg-rose-700 rounded-lg">Delete</button>
+              </div>
             </div>
           </div>
         )}
